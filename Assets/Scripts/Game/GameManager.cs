@@ -36,6 +36,17 @@ namespace TimeTravelBanana.Game
                 return;
             }
             Instance = this;
+            ActivateHiddenCanvases();
+        }
+
+        private static void ActivateHiddenCanvases()
+        {
+            var canvases = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < canvases.Length; i++)
+            {
+                var go = canvases[i].gameObject;
+                if (!go.activeSelf) go.SetActive(true);
+            }
         }
 
         private void OnDestroy()

@@ -74,7 +74,8 @@ namespace TimeTravelBanana.Timeline
         private void FixedUpdate()
         {
             if (currentTimelineMode == TimelineMode.Recording) {
-                currentTime += Time.fixedDeltaTime;
+                if (currentTime >= maxBufferSeconds) return;
+                currentTime = Mathf.Min(currentTime + Time.fixedDeltaTime, maxBufferSeconds);
                 timelineLength = currentTime;
                 for (int i = 0; i < timeObjects.Count; i++)
                     timeObjects[i].CaptureState(currentTime);

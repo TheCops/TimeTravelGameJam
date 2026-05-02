@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class TimelineSpawner : MonoBehaviour
 {
-    [SerializeField] private TimelineManager timeline;
+    private TimelineManager timeline;
     [SerializeField, Min(0f)] private float destroyGracePeriod = 1f;
 
     private struct Tracked
@@ -15,6 +15,18 @@ public class TimelineSpawner : MonoBehaviour
     private readonly List<Tracked> pendingDestroys = new List<Tracked>();
 
     public TimelineManager Timeline { get => timeline; set => timeline = value; }
+
+    private void Start()
+    {
+        if (timeline != null) return;
+        var gm = GameManager.Instance;
+        if (gm == null || gm.Timeline == null)
+        {
+            Debug.LogWarning($"{nameof(TimelineSpawner)} on {name}: GameManager.Instance.Timeline not available at Start.", this);
+            return;
+        }
+        timeline = gm.Timeline;
+    }
 
     public GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
     {

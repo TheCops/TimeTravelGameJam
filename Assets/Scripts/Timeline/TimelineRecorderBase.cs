@@ -2,7 +2,7 @@ using UnityEngine;
 
 public abstract class TimelineRecorderBase : MonoBehaviour, ITimelineAffected
 {
-    [SerializeField] protected TimelineManager timeline;
+    protected TimelineManager timeline;
 
     private float birthTime;
     private float deathTime = float.PositiveInfinity;
@@ -45,14 +45,30 @@ public abstract class TimelineRecorderBase : MonoBehaviour, ITimelineAffected
     {
         if (tm == null) return;
         timeline = tm;
-        OnConnected();
-        timeline.Register(this);
-        if (timeline.Mode != TimelineMode.Recording) OnEnterScrubbing();
+        Connect();
+    }
+
+    protected virtual void Start()
+    {
+        if (timeline != null) return;
+        var gm = GameManager.Instance;
+        if (gm == null || gm.Timeline == null)
+        {
+            Debug.LogWarning($"{nameof(TimelineRecorderBase)} on {name}: GameManager.Instance.Timeline not available at Start.", this);
+            return;
+        }
+        timeline = gm.Timeline;
+        Connect();
     }
 
     protected virtual void OnEnable()
     {
         if (timeline == null) return;
+        Connect();
+    }
+
+    private void Connect()
+    {
         OnConnected();
         timeline.Register(this);
         if (timeline.Mode != TimelineMode.Recording) OnEnterScrubbing();

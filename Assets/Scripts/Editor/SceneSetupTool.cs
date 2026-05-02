@@ -71,8 +71,6 @@ namespace TimeTravelBanana.EditorTools
             EnsureScenesFolder();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
-            BuildLevel1World();
-
             var canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -138,73 +136,6 @@ namespace TimeTravelBanana.EditorTools
             if (index >= current.Count) current.Add(entry);
             else current.Insert(index, entry);
             EditorBuildSettings.scenes = current.ToArray();
-        }
-
-        private static void BuildLevel1World()
-        {
-            const float floorY = -4f, ceilingY = 5f, leftX = -10f, rightX = 10f;
-            float width = rightX - leftX;
-            float height = ceilingY - floorY;
-            CreateStaticBox("Floor",    new Vector2((leftX + rightX) * 0.5f, floorY),    new Vector2(width, 0.5f),  new Color(0.3f, 0.25f, 0.2f));
-            CreateStaticBox("Ceiling",  new Vector2((leftX + rightX) * 0.5f, ceilingY),  new Vector2(width, 0.5f),  new Color(0.3f, 0.25f, 0.2f), bouncy: true);
-            CreateStaticBox("LeftWall", new Vector2(leftX,  (floorY + ceilingY) * 0.5f), new Vector2(0.5f, height), new Color(0.3f, 0.25f, 0.2f));
-            CreateStaticBox("RightWall",new Vector2(rightX, (floorY + ceilingY) * 0.5f), new Vector2(0.5f, height), new Color(0.3f, 0.25f, 0.2f));
-
-            CreateBucket(new Vector2(8f, -3.0f));
-
-            var launcherGo = new GameObject("Launcher");
-            launcherGo.transform.position = new Vector3(-8f, -2.5f, 0f);
-            var launcher = launcherGo.AddComponent<Launcher>();
-            launcher.SetLaunchAngle(60f);
-            launcher.SetLaunchSpeed(13f);
-
-            var gmGo = new GameObject("GameManager");
-            var gm = gmGo.AddComponent<GameManager>();
-            var so = new SerializedObject(gm);
-            so.FindProperty("launcher").objectReferenceValue = launcher;
-            so.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void CreateStaticBox(string name, Vector2 pos, Vector2 size, Color color, bool bouncy = false)
-        {
-            var go = new GameObject(name);
-            go.transform.position = pos;
-            go.transform.localScale = new Vector3(size.x, size.y, 1f);
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.WhiteSquare;
-            sr.color = color;
-            var col = go.AddComponent<BoxCollider2D>();
-            if (bouncy)
-                col.sharedMaterial = new PhysicsMaterial2D("CeilingBounce") { bounciness = 0.85f, friction = 0.1f };
-        }
-
-        private static void CreateBucket(Vector2 pos)
-        {
-            var root = new GameObject("Bucket");
-            root.transform.position = pos;
-            CreateChildBox(root, "Bottom", new Vector3(0f,    0f,   0f), new Vector2(2.0f, 0.3f), Color.cyan);
-            CreateChildBox(root, "Left",   new Vector3(-0.85f, 0.7f, 0f), new Vector2(0.3f, 1.4f), Color.cyan);
-            CreateChildBox(root, "Right",  new Vector3(0.85f,  0.7f, 0f), new Vector2(0.3f, 1.4f), Color.cyan);
-
-            var trigger = new GameObject("Trigger");
-            trigger.transform.SetParent(root.transform, false);
-            trigger.transform.localPosition = new Vector3(0f, 0.5f, 0f);
-            var triggerCol = trigger.AddComponent<BoxCollider2D>();
-            triggerCol.size = new Vector2(1.4f, 0.6f);
-            triggerCol.isTrigger = true;
-            trigger.AddComponent<Bucket>();
-        }
-
-        private static void CreateChildBox(GameObject parent, string name, Vector3 localPos, Vector2 size, Color color)
-        {
-            var go = new GameObject(name);
-            go.transform.SetParent(parent.transform, false);
-            go.transform.localPosition = localPos;
-            go.transform.localScale = new Vector3(size.x, size.y, 1f);
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.WhiteSquare;
-            sr.color = color;
-            go.AddComponent<BoxCollider2D>();
         }
 
         private static Button CreateButton(Transform parent, string name, string label, Vector2 anchoredPos)

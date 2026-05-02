@@ -138,8 +138,8 @@ namespace TimeTravelBanana.UI
             rt.anchorMin = new Vector2(0.5f, 1f);
             rt.anchorMax = new Vector2(0.5f, 1f);
             rt.pivot = new Vector2(0.5f, 1f);
-            rt.sizeDelta = new Vector2(220f, 70f);
-            rt.anchoredPosition = new Vector2(0f, -20f);
+            rt.sizeDelta = new Vector2(140f, 44f);
+            rt.anchoredPosition = new Vector2(0f, -12f);
             btnGo.GetComponent<Image>().color = new Color(0.15f, 0.5f, 0.25f, 0.95f);
 
             var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
@@ -151,7 +151,7 @@ namespace TimeTravelBanana.UI
             toggleLabel.text = "PLAY";
             toggleLabel.alignment = TextAnchor.MiddleCenter;
             toggleLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            toggleLabel.fontSize = 32;
+            toggleLabel.fontSize = 20;
             toggleLabel.color = Color.white;
 
             toggleButton = btnGo.GetComponent<Button>();

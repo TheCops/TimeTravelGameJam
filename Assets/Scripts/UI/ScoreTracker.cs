@@ -10,9 +10,9 @@ namespace TimeTravelBanana.UI
         private static int sessionTopScore;
 
         [SerializeField] private float popupDuration = 1.1f;
-        [SerializeField] private float popupRise = 110f;
+        [SerializeField] private float popupRise = 70f;
         [SerializeField] private float worldYOffset = 0.7f;
-        [SerializeField] private float punchScale = 1.7f;
+        [SerializeField] private float punchScale = 1.4f;
         [SerializeField] private float punchTime = 0.12f;
         [SerializeField] private float fadeStart = 0.6f;
 
@@ -30,8 +30,8 @@ namespace TimeTravelBanana.UI
             if (canvas == null) { Debug.LogWarning("ScoreTracker: no Canvas in scene; score UI not built."); return; }
             canvasRect = canvas.transform as RectTransform;
 
-            scoreLabel = CreateScoreText(canvas.transform, "ScoreText", new Vector2(-20f, -20f), 36, "Score: 0");
-            topLabel   = CreateScoreText(canvas.transform, "TopScoreText", new Vector2(-20f, -68f), 28, "Best: 0");
+            scoreLabel = CreateScoreText(canvas.transform, "ScoreText", new Vector2(-12f, -12f), 22, "Score: 0");
+            topLabel   = CreateScoreText(canvas.transform, "TopScoreText", new Vector2(-12f, -42f), 16, "Best: 0");
             EnsurePopupLayer();
         }
 
@@ -78,7 +78,7 @@ namespace TimeTravelBanana.UI
             rt.anchorMin = new Vector2(1f, 1f);
             rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(1f, 1f);
-            rt.sizeDelta = new Vector2(360f, 48f);
+            rt.sizeDelta = new Vector2(220f, 32f);
             rt.anchoredPosition = anchoredPos;
             var t = go.GetComponent<Text>();
             t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -122,7 +122,7 @@ namespace TimeTravelBanana.UI
             rt.SetParent(popupLayer, false);
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(260f, 90f);
+            rt.sizeDelta = new Vector2(170f, 60f);
             rt.anchoredPosition = local;
             rt.localScale = Vector3.one * punchScale;
 
@@ -131,7 +131,7 @@ namespace TimeTravelBanana.UI
             t.alignment = TextAnchor.MiddleCenter;
             t.text = (points > 0 ? "+" : "") + points;
             t.fontStyle = FontStyle.Bold;
-            t.fontSize = points >= 3 ? 64 : (points == 2 ? 52 : 44);
+            t.fontSize = points >= 3 ? 40 : (points == 2 ? 32 : 26);
             t.raycastTarget = false;
             t.color = points switch
             {

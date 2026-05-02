@@ -18,9 +18,9 @@ namespace TimeTravelBanana.UI
 
         [SerializeField] private int trampolineStock = 3;
         [SerializeField] private int blockStock = 3;
-        [SerializeField] private float panelWidth = 96f;
-        [SerializeField] private float slotSize = 70f;
-        [SerializeField] private float slotSpacing = 10f;
+        [SerializeField] private float panelWidth = 150f;
+        [SerializeField] private float slotSize = 110f;
+        [SerializeField] private float slotSpacing = 16f;
 
         private readonly List<Entry> entries = new List<Entry>();
         private readonly List<TraySlot> slots = new List<TraySlot>();
@@ -176,11 +176,11 @@ namespace TimeTravelBanana.UI
             countRt.anchorMin = new Vector2(1f, 0f);
             countRt.anchorMax = new Vector2(1f, 0f);
             countRt.pivot = new Vector2(1f, 0f);
-            countRt.sizeDelta = new Vector2(32f, 22f);
-            countRt.anchoredPosition = new Vector2(-4f, 3f);
+            countRt.sizeDelta = new Vector2(48f, 36f);
+            countRt.anchoredPosition = new Vector2(-6f, 4f);
             var count = countGo.GetComponent<Text>();
             count.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            count.fontSize = 16;
+            count.fontSize = 28;
             count.alignment = TextAnchor.LowerRight;
             count.color = Color.white;
 

@@ -64,6 +64,15 @@ namespace TimeTravelBanana.Game
         private void OnDestroy()
         {
             if (activeDragger == this) activeDragger = null;
+            var gm = GameManager.Instance;
+            if (gm != null)
+            {
+                gm.OnPlacingState  -= HandlePlacing;
+                gm.OnPlayingState  -= HandlePlayingOrLocked;
+                gm.OnResolvedState -= HandlePlayingOrLocked;
+                gm.OnPausedState   -= HandlePlayingOrLocked;
+                gm.UnregisterDraggable(this);
+            }
         }
 
         private void Awake()
@@ -72,6 +81,20 @@ namespace TimeTravelBanana.Game
             rb = GetComponent<Rigidbody2D>();
             if (dragCamera == null) dragCamera = Camera.main;
         }
+
+        private void Start()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            gm.RegisterDraggable(this);
+            gm.OnPlacingState  += HandlePlacing;
+            gm.OnPlayingState  += HandlePlayingOrLocked;
+            gm.OnResolvedState += HandlePlayingOrLocked;
+            gm.OnPausedState   += HandlePlayingOrLocked;
+        }
+
+        private void HandlePlacing() => SetDragEnabled(true);
+        private void HandlePlayingOrLocked() => SetDragEnabled(false);
 
         private void Update()
         {

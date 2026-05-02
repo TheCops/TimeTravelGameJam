@@ -8,7 +8,6 @@ namespace TimeTravelBanana.UI
 {
     public class TrayController : MonoBehaviour
     {
-        [Serializable]
         public class Entry
         {
             public string label;
@@ -17,39 +16,66 @@ namespace TimeTravelBanana.UI
             public Func<Vector2, PlanningDraggable> spawn;
         }
 
-        [SerializeField] private RectTransform panel;
+        [SerializeField] private int trampolineStock = 3;
+        [SerializeField] private int blockStock = 3;
+        [SerializeField] private float panelWidth = 150f;
         [SerializeField] private float slotSize = 110f;
         [SerializeField] private float slotSpacing = 16f;
 
         private readonly List<Entry> entries = new List<Entry>();
         private readonly List<TraySlot> slots = new List<TraySlot>();
         private readonly List<int> stocks = new List<int>();
-        private bool acceptsInput = true;
-        private GameStateController gameState;
+
+        private RectTransform panel;
         private Camera worldCamera;
+        private bool acceptsInput = true;
 
         public bool AcceptsInput => acceptsInput;
 
-        public void Configure(RectTransform panelRect, GameStateController state, Camera cam, IEnumerable<Entry> initialEntries)
+        private void Awake()
         {
-            if (panelRect != null) panel = panelRect;
-            gameState = state;
-            worldCamera = cam;
-            entries.Clear();
-            stocks.Clear();
-            foreach (var e in initialEntries)
-            {
-                entries.Add(e);
-                stocks.Add(e.stock);
-            }
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+            if (canvas == null) { Debug.LogWarning("TrayController: no Canvas in scene; tray UI will not be built."); return; }
+
+            worldCamera = Camera.main;
+            panel = BuildPanel(canvas.transform);
+            entries.Add(new Entry { label = "Trampoline", stock = trampolineStock, iconColor = new Color(0.3f, 0.7f, 1f),  spawn = pos => Spawner.Trampoline(pos) });
+            entries.Add(new Entry { label = "Block",      stock = blockStock,      iconColor = new Color(0.85f, 0.7f, 0.4f), spawn = pos => Spawner.Block(pos) });
+            for (int i = 0; i < entries.Count; i++) stocks.Add(entries[i].stock);
             BuildSlots();
-            if (gameState != null) gameState.OnStateChanged += HandleStateChanged;
-            HandleStateChanged(gameState != null ? gameState.State : GameState.Planning);
+        }
+
+        private void Start()
+        {
+            var gm = GameManager.Instance;
+            if (gm != null)
+            {
+                gm.OnPlacingState  += HandlePlacing;
+                gm.OnPlayingState  += HandlePlaying;
+                gm.OnResolvedState += HandlePlaying;
+                gm.OnPausedState   += HandlePlaying;
+                ApplyAcceptsInput(gm.State == GameState.Placing);
+            }
         }
 
         private void OnDestroy()
         {
-            if (gameState != null) gameState.OnStateChanged -= HandleStateChanged;
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            gm.OnPlacingState  -= HandlePlacing;
+            gm.OnPlayingState  -= HandlePlaying;
+            gm.OnResolvedState -= HandlePlaying;
+            gm.OnPausedState   -= HandlePlaying;
+        }
+
+        private void HandlePlacing() => ApplyAcceptsInput(true);
+        private void HandlePlaying() => ApplyAcceptsInput(false);
+
+        private void ApplyAcceptsInput(bool v)
+        {
+            acceptsInput = v;
+            for (int i = 0; i < slots.Count; i++) slots[i].SetInteractable(v);
         }
 
         public int GetStock(int index) => (index >= 0 && index < stocks.Count) ? stocks[index] : 0;
@@ -70,8 +96,6 @@ namespace TimeTravelBanana.UI
 
             int capturedIdx = idx;
             draggable.OnRequestDestroy += d => HandleDraggableDestroyed(d, capturedIdx);
-
-            if (gameState != null) gameState.RegisterDraggable(draggable);
             draggable.BeginDragFromSpawn();
         }
 
@@ -83,7 +107,6 @@ namespace TimeTravelBanana.UI
                 stocks[entryIdx]++;
                 if (entryIdx < slots.Count) slots[entryIdx].UpdateCount(stocks[entryIdx]);
             }
-            if (gameState != null) gameState.UnregisterDraggable(d);
             Destroy(d.gameObject);
         }
 
@@ -99,17 +122,27 @@ namespace TimeTravelBanana.UI
             return world;
         }
 
+        private RectTransform BuildPanel(Transform canvasTransform)
+        {
+            var go = new GameObject("TrayPanel", typeof(RectTransform), typeof(Image));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(canvasTransform, false);
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 0.5f);
+            rt.sizeDelta = new Vector2(panelWidth, 0f);
+            rt.anchoredPosition = Vector2.zero;
+            go.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.5f);
+            rt.SetAsFirstSibling();
+            return rt;
+        }
+
         private void BuildSlots()
         {
             if (panel == null) return;
             for (int i = panel.childCount - 1; i >= 0; i--) Destroy(panel.GetChild(i).gameObject);
             slots.Clear();
-
-            for (int i = 0; i < entries.Count; i++)
-            {
-                var slot = CreateSlot(panel, entries[i], i);
-                slots.Add(slot);
-            }
+            for (int i = 0; i < entries.Count; i++) slots.Add(CreateSlot(panel, entries[i], i));
         }
 
         private TraySlot CreateSlot(RectTransform parent, Entry entry, int index)
@@ -156,12 +189,6 @@ namespace TimeTravelBanana.UI
             slot.Bind(icon, count, group);
             slot.Init(this, index, entry.iconColor, entry.label, SpriteFactory.WhiteSquare);
             return slot;
-        }
-
-        private void HandleStateChanged(GameState s)
-        {
-            acceptsInput = (s == GameState.Planning);
-            for (int i = 0; i < slots.Count; i++) slots[i].SetInteractable(acceptsInput);
         }
     }
 }

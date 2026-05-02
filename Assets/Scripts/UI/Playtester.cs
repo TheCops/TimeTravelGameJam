@@ -11,8 +11,6 @@ namespace TimeTravelBanana.UI
         [SerializeField] private int maxActiveBananas = 10;
         [SerializeField] private int maxBananasPerRound = 100;
 
-        private GameStateController gameState;
-        private Launcher launcher;
         private Button toggleButton;
         private Text toggleLabel;
 
@@ -21,36 +19,59 @@ namespace TimeTravelBanana.UI
         private bool playing;
         private int totalSpawned;
 
-        public void Configure(GameStateController state, Launcher l, Button btn, Text label)
+        private void Awake()
         {
-            gameState = state;
-            launcher = l;
-            toggleButton = btn;
-            toggleLabel = label;
-            if (toggleButton != null) toggleButton.onClick.AddListener(Toggle);
-            if (gameState != null) gameState.OnStateChanged += HandleStateChanged;
-            HandleStateChanged(gameState != null ? gameState.State : GameState.Planning);
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+            if (canvas == null) { Debug.LogWarning("Playtester: no Canvas in scene; PLAY button not built."); return; }
+            BuildButton(canvas.transform);
+        }
+
+        private void Start()
+        {
+            var gm = GameManager.Instance;
+            if (gm != null)
+            {
+                gm.OnPlacingState  += HandlePlacing;
+                gm.OnPlayingState  += HandlePlaying;
+                gm.OnResolvedState += HandlePlacing;
+                gm.OnPausedState   += HandlePlacing;
+                if (gm.State == GameState.Playing) HandlePlaying(); else HandlePlacing();
+            }
         }
 
         private void OnDestroy()
         {
-            if (gameState != null) gameState.OnStateChanged -= HandleStateChanged;
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            gm.OnPlacingState  -= HandlePlacing;
+            gm.OnPlayingState  -= HandlePlaying;
+            gm.OnResolvedState -= HandlePlacing;
+            gm.OnPausedState   -= HandlePlacing;
         }
 
         public void Toggle()
         {
-            if (gameState == null) return;
-            if (playing) gameState.EnterPlanning();
-            else gameState.EnterPlaytest();
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            if (playing) gm.EnterPlanning();
+            else gm.EnterPlaytest();
         }
 
-        private void HandleStateChanged(GameState s)
+        private void HandlePlacing()
         {
             bool wasPlaying = playing;
-            playing = (s == GameState.Playing);
-            if (toggleLabel != null) toggleLabel.text = playing ? "STOP" : "PLAY";
-            if (playing && !wasPlaying) StartPlaytest();
-            else if (!playing && wasPlaying) StopPlaytest();
+            playing = false;
+            if (toggleLabel != null) toggleLabel.text = "PLAY";
+            if (wasPlaying) StopPlaytest();
+        }
+
+        private void HandlePlaying()
+        {
+            bool wasPlaying = playing;
+            playing = true;
+            if (toggleLabel != null) toggleLabel.text = "STOP";
+            if (!wasPlaying) StartPlaytest();
         }
 
         private void StartPlaytest()
@@ -87,24 +108,54 @@ namespace TimeTravelBanana.UI
 
             if (totalSpawned >= maxBananasPerRound && active.Count == 0)
             {
-                if (gameState != null) gameState.EnterPlanning();
+                var gm = GameManager.Instance;
+                if (gm != null) gm.EnterPlanning();
             }
         }
 
         private void SpawnOne()
         {
+            var gm = GameManager.Instance;
+            var launcher = gm != null ? gm.Launcher : null;
             if (launcher == null) return;
             var b = launcher.SpawnAndLaunchInstance(autoDestroyOnResolve: true);
             if (b != null) active.Enqueue(b);
             totalSpawned++;
 
             while (active.Count > 0 && active.Peek() == null) active.Dequeue();
-
             while (active.Count > maxActiveBananas)
             {
                 var oldest = active.Dequeue();
                 if (oldest != null) Destroy(oldest.gameObject);
             }
+        }
+
+        private void BuildButton(Transform canvasTransform)
+        {
+            var btnGo = new GameObject("PlayButton", typeof(RectTransform), typeof(Image), typeof(Button));
+            var rt = (RectTransform)btnGo.transform;
+            rt.SetParent(canvasTransform, false);
+            rt.anchorMin = new Vector2(0.5f, 1f);
+            rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.sizeDelta = new Vector2(220f, 70f);
+            rt.anchoredPosition = new Vector2(0f, -20f);
+            btnGo.GetComponent<Image>().color = new Color(0.15f, 0.5f, 0.25f, 0.95f);
+
+            var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            var labelRt = (RectTransform)labelGo.transform;
+            labelRt.SetParent(rt, false);
+            labelRt.anchorMin = Vector2.zero; labelRt.anchorMax = Vector2.one;
+            labelRt.offsetMin = labelRt.offsetMax = Vector2.zero;
+            toggleLabel = labelGo.GetComponent<Text>();
+            toggleLabel.text = "PLAY";
+            toggleLabel.alignment = TextAnchor.MiddleCenter;
+            toggleLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            toggleLabel.fontSize = 32;
+            toggleLabel.color = Color.white;
+
+            toggleButton = btnGo.GetComponent<Button>();
+            toggleButton.onClick.AddListener(Toggle);
         }
     }
 }

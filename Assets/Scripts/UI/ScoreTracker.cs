@@ -16,7 +16,6 @@ namespace TimeTravelBanana.UI
         [SerializeField] private float punchTime = 0.12f;
         [SerializeField] private float fadeStart = 0.6f;
 
-        private GameStateController gameState;
         private Text scoreLabel;
         private Text topLabel;
         private Canvas canvas;
@@ -24,46 +23,37 @@ namespace TimeTravelBanana.UI
         private RectTransform popupLayer;
         private int score;
 
-        public void Configure(GameStateController state, Text scoreText, Text topText, Canvas hostCanvas)
+        private void Awake()
         {
-            gameState = state;
-            scoreLabel = scoreText;
-            topLabel = topText;
-            canvas = hostCanvas;
-            canvasRect = canvas != null ? canvas.transform as RectTransform : null;
+            canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+            if (canvas == null) { Debug.LogWarning("ScoreTracker: no Canvas in scene; score UI not built."); return; }
+            canvasRect = canvas.transform as RectTransform;
+
+            scoreLabel = CreateScoreText(canvas.transform, "ScoreText", new Vector2(-20f, -20f), 36, "Score: 0");
+            topLabel   = CreateScoreText(canvas.transform, "TopScoreText", new Vector2(-20f, -68f), 28, "Best: 0");
             EnsurePopupLayer();
-            if (gameState != null) gameState.OnStateChanged += HandleStateChanged;
+        }
+
+        private void Start()
+        {
+            var gm = GameManager.Instance;
+            if (gm != null) gm.OnPlayingState += HandlePlayingStarted;
             Banana.OnAnyBananaScored += HandleBananaScored;
             Refresh();
         }
 
-        private void EnsurePopupLayer()
-        {
-            if (canvasRect == null) return;
-            var existing = canvasRect.Find("PopupLayer") as RectTransform;
-            if (existing != null) { popupLayer = existing; popupLayer.SetAsLastSibling(); return; }
-            var go = new GameObject("PopupLayer", typeof(RectTransform));
-            popupLayer = (RectTransform)go.transform;
-            popupLayer.SetParent(canvasRect, false);
-            popupLayer.anchorMin = Vector2.zero;
-            popupLayer.anchorMax = Vector2.one;
-            popupLayer.offsetMin = popupLayer.offsetMax = Vector2.zero;
-            popupLayer.SetAsLastSibling();
-        }
-
         private void OnDestroy()
         {
-            if (gameState != null) gameState.OnStateChanged -= HandleStateChanged;
+            var gm = GameManager.Instance;
+            if (gm != null) gm.OnPlayingState -= HandlePlayingStarted;
             Banana.OnAnyBananaScored -= HandleBananaScored;
         }
 
-        private void HandleStateChanged(GameState s)
+        private void HandlePlayingStarted()
         {
-            if (s == GameState.Playing)
-            {
-                score = 0;
-                Refresh();
-            }
+            score = 0;
+            Refresh();
         }
 
         private void HandleBananaScored(int points, Vector3 worldPos)
@@ -78,6 +68,39 @@ namespace TimeTravelBanana.UI
         {
             if (scoreLabel != null) scoreLabel.text = "Score: " + score;
             if (topLabel != null) topLabel.text = "Best: " + sessionTopScore;
+        }
+
+        private static Text CreateScoreText(Transform parent, string name, Vector2 anchoredPos, int fontSize, string initial)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = new Vector2(1f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.sizeDelta = new Vector2(360f, 48f);
+            rt.anchoredPosition = anchoredPos;
+            var t = go.GetComponent<Text>();
+            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.fontSize = fontSize;
+            t.alignment = TextAnchor.MiddleRight;
+            t.color = Color.white;
+            t.text = initial;
+            return t;
+        }
+
+        private void EnsurePopupLayer()
+        {
+            if (canvasRect == null) return;
+            var existing = canvasRect.Find("PopupLayer") as RectTransform;
+            if (existing != null) { popupLayer = existing; popupLayer.SetAsLastSibling(); return; }
+            var go = new GameObject("PopupLayer", typeof(RectTransform));
+            popupLayer = (RectTransform)go.transform;
+            popupLayer.SetParent(canvasRect, false);
+            popupLayer.anchorMin = Vector2.zero;
+            popupLayer.anchorMax = Vector2.one;
+            popupLayer.offsetMin = popupLayer.offsetMax = Vector2.zero;
+            popupLayer.SetAsLastSibling();
         }
 
         private void SpawnPopup(int points, Vector3 worldPos)

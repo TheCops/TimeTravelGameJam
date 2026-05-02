@@ -14,7 +14,8 @@ namespace TimeTravelBanana.Game
         private void OnTriggerEnter2D(Collider2D other)
         {
             var banana = other.GetComponentInParent<Banana>();
-            if (banana != null) banana.HitBucket();
+            if (banana == null || banana.Resolved) return;
+            banana.HitBucket();
         }
     }
 }

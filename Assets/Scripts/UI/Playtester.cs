@@ -9,6 +9,7 @@ namespace TimeTravelBanana.UI
     {
         [SerializeField] private float spawnInterval = 1f;
         [SerializeField] private int maxActiveBananas = 10;
+        [SerializeField] private int maxBananasPerRound = 100;
 
         private GameStateController gameState;
         private Launcher launcher;
@@ -18,6 +19,7 @@ namespace TimeTravelBanana.UI
         private readonly Queue<Banana> active = new Queue<Banana>();
         private float timer;
         private bool playing;
+        private int totalSpawned;
 
         public void Configure(GameStateController state, Launcher l, Button btn, Text label)
         {
@@ -54,6 +56,7 @@ namespace TimeTravelBanana.UI
         private void StartPlaytest()
         {
             timer = 0f;
+            totalSpawned = 0;
             SpawnOne();
         }
 
@@ -69,11 +72,22 @@ namespace TimeTravelBanana.UI
         private void Update()
         {
             if (!playing) return;
-            timer += Time.deltaTime;
-            if (timer >= spawnInterval)
+
+            if (totalSpawned < maxBananasPerRound)
             {
-                timer -= spawnInterval;
-                SpawnOne();
+                timer += Time.deltaTime;
+                if (timer >= spawnInterval)
+                {
+                    timer -= spawnInterval;
+                    SpawnOne();
+                }
+            }
+
+            while (active.Count > 0 && active.Peek() == null) active.Dequeue();
+
+            if (totalSpawned >= maxBananasPerRound && active.Count == 0)
+            {
+                if (gameState != null) gameState.EnterPlanning();
             }
         }
 
@@ -82,6 +96,7 @@ namespace TimeTravelBanana.UI
             if (launcher == null) return;
             var b = launcher.SpawnAndLaunchInstance(autoDestroyOnResolve: true);
             if (b != null) active.Enqueue(b);
+            totalSpawned++;
 
             while (active.Count > 0 && active.Peek() == null) active.Dequeue();
 

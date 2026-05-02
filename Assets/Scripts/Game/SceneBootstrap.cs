@@ -42,6 +42,39 @@ namespace TimeTravelBanana.Game
 
             BuildTray(state);
             BuildPlaytester(state, launcher);
+            BuildScoreboard(state);
+        }
+
+        private void BuildScoreboard(GameStateController state)
+        {
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            if (canvas == null) return;
+
+            var scoreText = CreateScoreText(canvas.transform, "ScoreText", new Vector2(-20f, -20f), 36, "Score: 0");
+            var topText   = CreateScoreText(canvas.transform, "TopScoreText", new Vector2(-20f, -68f), 28, "Best: 0");
+
+            var trackerGo = new GameObject("ScoreTracker");
+            var tracker = trackerGo.AddComponent<ScoreTracker>();
+            tracker.Configure(state, scoreText, topText, canvas);
+        }
+
+        private static Text CreateScoreText(Transform parent, string name, Vector2 anchoredPos, int fontSize, string initial)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = new Vector2(1f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.sizeDelta = new Vector2(360f, 48f);
+            rt.anchoredPosition = anchoredPos;
+            var t = go.GetComponent<Text>();
+            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.fontSize = fontSize;
+            t.alignment = TextAnchor.MiddleRight;
+            t.color = Color.white;
+            t.text = initial;
+            return t;
         }
 
         private void BuildTray(GameStateController state)

@@ -241,12 +241,13 @@ namespace TimeTravelBanana.EditorTools
 
         private static void EnsureCanvasUiControllers()
         {
-            var canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+            var canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
             if (canvas == null) return;
             var go = canvas.gameObject;
             if (go.GetComponent<TrayController>() == null) go.AddComponent<TrayController>();
             if (go.GetComponent<Playtester>() == null)     go.AddComponent<Playtester>();
             if (go.GetComponent<ScoreTracker>() == null)   go.AddComponent<ScoreTracker>();
+            if (go.activeSelf) go.SetActive(false);
         }
 
         private static void EnsureScenesFolder()

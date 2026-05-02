@@ -8,7 +8,7 @@ namespace TimeTravelBanana.Timeline
         [SerializeField] private string timelineId = "Default";
         [SerializeField, Min(1)] private int tickRate = 50;
         [SerializeField, Min(1)] private int maxBufferSeconds = 30;
-        [SerializeField] private TimelineMode startMode = TimelineMode.Recording;
+        [SerializeField] private TimelineMode startMode = TimelineMode.Idle;
 
         private readonly List<ITimelineAffected> timeObjects = new List<ITimelineAffected>();
         private float currentTime;
@@ -71,6 +71,47 @@ namespace TimeTravelBanana.Timeline
             timeObjects.Remove(affected);
         }
 
+        public void ResetTimeline()
+        {
+            Mode = TimelineMode.Idle;
+            currentTime = 0f;
+            timelineLength = 0f;
+            for (int i = 0; i < timeObjects.Count; i++)
+                timeObjects[i].TruncateFuture(-1f);
+        }
+
+        public void BakeFor(float seconds)
+        {
+            var oldSimMode = Physics2D.simulationMode;
+            Physics2D.simulationMode = SimulationMode2D.Script;
+
+            currentTime = 0f;
+            timelineLength = 0f;
+            Mode = TimelineMode.Recording;
+
+            for (int i = 0; i < timeObjects.Count; i++)
+                timeObjects[i].CaptureState(currentTime);
+
+            float dt = Time.fixedDeltaTime;
+            int steps = Mathf.CeilToInt(seconds / dt);
+
+            for (int s = 0; s < steps; s++)
+            {
+                Physics2D.Simulate(dt);
+                currentTime += dt;
+                timelineLength = currentTime;
+                for (int i = 0; i < timeObjects.Count; i++)
+                    timeObjects[i].CaptureState(currentTime);
+            }
+
+            Physics2D.simulationMode = oldSimMode;
+
+            currentTime = 0f;
+            Mode = TimelineMode.Scrubbing;
+            for (int i = 0; i < timeObjects.Count; i++)
+                timeObjects[i].RestoreState(currentTime);
+        }
+
         private void FixedUpdate()
         {
             if (currentTimelineMode == TimelineMode.Recording) {
@@ -86,7 +127,7 @@ namespace TimeTravelBanana.Timeline
         {
             if (currentTimelineMode == TimelineMode.Scrubbing) {
                 for (int i = 0; i < timeObjects.Count; i++)
-                    timeObjects[i].RestoreState(currentTime);     
+                    timeObjects[i].RestoreState(currentTime);
             }
         }
     }

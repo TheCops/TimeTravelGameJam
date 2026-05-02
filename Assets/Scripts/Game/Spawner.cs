@@ -29,14 +29,13 @@ namespace TimeTravelBanana.Game
         {
             var go = new GameObject("Block");
             go.transform.position = pos;
-            go.transform.localScale = new Vector3(1f, 1f, 1f);
+            go.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
 
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.WhiteSquare;
-            sr.color = new Color(0.85f, 0.7f, 0.4f);
+            sr.sprite = Resources.Load<Sprite>("Art/pan");
             sr.sortingOrder = 2;
 
-            var col = go.AddComponent<BoxCollider2D>();
+            var col = go.AddComponent<PolygonCollider2D>();
             col.sharedMaterial = new PhysicsMaterial2D("Block") { bounciness = 0.05f, friction = 0.6f };
 
             var rb = go.AddComponent<Rigidbody2D>();

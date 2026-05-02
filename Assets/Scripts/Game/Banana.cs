@@ -8,15 +8,15 @@ namespace TimeTravelBanana.Game
         [SerializeField] private float maxFlightTime = 8f;
         [SerializeField] private float offscreenY = -20f;
         [SerializeField] private float offscreenXAbs = 30f;
+        [SerializeField] private bool autoDestroyOnResolve;
 
         private Rigidbody2D rb;
-        private Vector3 startPosition;
-        private Quaternion startRotation;
         private float launchTime;
         private bool launched;
 
         public bool Launched => launched;
         public bool Resolved { get; private set; }
+        public bool AutoDestroyOnResolve { get => autoDestroyOnResolve; set => autoDestroyOnResolve = value; }
 
         public event System.Action OnWin;
         public event System.Action OnLose;
@@ -24,16 +24,11 @@ namespace TimeTravelBanana.Game
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
-            startPosition = transform.position;
-            startRotation = transform.rotation;
-            FreezeAtRest();
-            gameObject.SetActive(false);
         }
 
         public void Launch(Vector2 spawnPos, Vector2 velocity)
         {
             transform.position = spawnPos;
-            transform.rotation = startRotation;
             gameObject.SetActive(true);
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.linearVelocity = velocity;
@@ -43,21 +38,12 @@ namespace TimeTravelBanana.Game
             Resolved = false;
         }
 
-        public void ResetBanana()
-        {
-            launched = false;
-            Resolved = false;
-            FreezeAtRest();
-            transform.position = startPosition;
-            transform.rotation = startRotation;
-            gameObject.SetActive(false);
-        }
-
         public void HitBucket()
         {
             if (Resolved) return;
             Resolved = true;
             OnWin?.Invoke();
+            if (autoDestroyOnResolve) Destroy(gameObject);
         }
 
         private void Update()
@@ -68,14 +54,8 @@ namespace TimeTravelBanana.Game
             {
                 Resolved = true;
                 OnLose?.Invoke();
+                if (autoDestroyOnResolve) Destroy(gameObject);
             }
-        }
-
-        private void FreezeAtRest()
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-            rb.bodyType = RigidbodyType2D.Kinematic;
         }
     }
 }

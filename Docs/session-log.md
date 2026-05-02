@@ -111,3 +111,60 @@ Don't do this session:
 - Art (artist).
 
 When you're done, append a new entry describing what shipped, what state the gameplay loop is in, any gotchas, and a prompt for the next session — likely the time-block triggers.
+
+---
+
+## 2026-05-02 (later still) — Tray UX + playtest mode
+
+**Who:** DJ + Claude (dj-ui)
+
+**What shipped:**
+
+- **Tray UX (UCH-style, runtime-built).**
+  - Left-edge `TrayPanel` with two slots: Trampoline (blue, x3) and Block (tan, x3). Stocks fixed per level, no refill except via destroy refund.
+  - One-click-and-drag spawn: pointer down on slot → world object instantiates under cursor → user drags to place → release drops it. Object stays Kinematic so it doesn't fall under gravity once placed.
+  - Grid snap (`snapSize = 0.5` world units, on each `PlanningDraggable`).
+  - Scroll-wheel rotation while dragging (15° per tick, accumulator-based so trackpad smooth-scroll doesn't spin objects to oblivion).
+  - Right-click on a placed obstacle (or while dragging) → destroy + refund stock to its tray slot.
+  - Static `activeDragger` guard in `PlanningDraggable` prevents two draggables from arbitrating simultaneously, so right-click hits only the dragged one when objects overlap.
+  - Tray locks (slots greyed out, non-interactable) when game state != Planning.
+- **Playtest mode.**
+  - New `Playtester` MonoBehaviour. Subscribed to `GameStateController.OnStateChanged`. While `State == Playing`, spawns one fresh `Banana` per second from `Launcher.SpawnAndLaunchInstance(autoDestroyOnResolve: true)`.
+  - FIFO queue capped at 10. New spawns evict the oldest active banana. Playtest bananas self-destroy on bucket/timeout/offscreen (no win/lose UI fires; that's the "real game mode" path which is currently unbuilt).
+  - Top-center `PLAY` button on the Canvas, label flips to `STOP` while playtesting. SPACE also toggles. R returns to Planning while Playing.
+- **Code cleanup.** This batch went further than the prior session-prompt deferred — necessary because the bake/replay path was actively blocking the playtest spawn loop.
+  - Ripped `BakeFor` + `BeginPlayback` calls out of `GameStateController`. Dropped `TimelineManager` and `ObjectTimeController` from `SceneBootstrap` entirely (no callers). They still exist as files in `Assets/Scripts/Timeline/` and `Assets/Scripts/Game/ObjectTimeController.cs` but nothing references them.
+  - `GameState` enum trimmed to just `Planning` and `Playing`. `Baking` and `Resolved` gone.
+  - `GameStateController` no longer holds `timeline`, `timeController`, `bakeDuration`, `subscribedToBanana`, or banana-event handlers. `Configure(launcher, draggables)` is the new signature.
+  - Single-banana scene flow gone. `SceneBootstrap` no longer creates a banana. `Launcher` no longer holds a banana ref or has a no-arg `Launch()`. `Banana` no longer self-deactivates in `Awake` and lost `ResetBanana` / `startPosition` / `startRotation` (unused once playtest spawns fresh instances each fire).
+  - New `BananaFactory.Create(pos)` is the canonical banana-spawn helper.
+
+**Files in play:** `Banana.cs`, `BananaFactory.cs` (new), `Launcher.cs`, `GameStateController.cs`, `SceneBootstrap.cs`, `PlanningDraggable.cs`, `Spawner.cs` (new earlier this session), `UI/TrayController.cs`, `UI/TraySlot.cs`, `UI/Playtester.cs` (new), `UI/LevelOverlay.cs`.
+
+**Gotchas / decisions:**
+
+- The next-session prompt above (worldTimeRate plumbing, level timer, win/lose wiring) is now **partially obsolete**. The bake rip-out is done. `LaunchSequence` doesn't exist anymore. The deferred items now look more like: (a) build worldTimeRate + cyclical objects + time-block triggers, (b) build a real "single-banana mission mode" that wires win/lose to `LevelOverlay`. The level-timer item only matters once mission mode exists.
+- `LevelOverlay` is still wired to win/lose panels via the editor tool, but nothing currently drives `ShowWin()` / `ShowLose()`. Playtest bananas auto-destroy without firing the overlay. That's intentional for now.
+- `Assets/Scripts/Timeline/*` and `Assets/Scripts/Game/ObjectTimeController.cs` are now fully orphaned. Safe to delete in the next cleanup pass — none of the live game scripts reference them. Kept them around because they have `.meta` files and removing under Unity is cleaner from inside the editor.
+- Snap is hardcoded at 0.5 world units. Rotation step at 15°. Both are `[SerializeField]` on `PlanningDraggable` so per-instance overrides are possible if a particular obstacle wants finer placement.
+
+---
+
+### Prompt for next session
+
+You're picking up the Time-Travel Banana jam. Read `gamedoc.md` and the entries above before starting. Confirm Level1 still plays — open `MainMenu`, press Play, click `PLAY` in Level1, watch bananas arc out of the launcher. Place a trampoline mid-arc, watch the bananas bounce. Right-click trampoline to refund. If any of that's broken, fix it before doing new work.
+
+The big remaining gameplay mechanic is the **time-rate system from `gamedoc.md`** — special blocks the banana flies through that change a global `worldTimeRate` (slow 0.3, fast 2.5, reverse -1.0). Concretely:
+
+1. **Plumb `worldTimeRate`.** New static or singleton — likely `WorldTime.Rate` (a static class). Default 1.0. Resets to 1.0 every time `GameStateController` enters Planning. While `Playing`, it's mutated by trigger blocks.
+2. **Add cyclical objects that respond.** Rocket and balloon from the gamedoc. They tick their own behavior scaled by `WorldTime.Rate` (negative rate flips direction). Add them to the tray, give each a stock count. The trampoline stays passive (already correct).
+3. **Time blocks.** Three trigger-block variants (slow / fast / reverse). On `OnTriggerEnter2D` with a Banana, set `WorldTime.Rate` to the block's value. Last block wins. No duration — the rate stays until another block changes it. Add them to the tray with stock counts.
+4. **Test in playtest.** Place a fast block, watch bananas accelerate. Place a reverse block, watch the rocket flip. Place a chain of slow→fast and confirm last-block-wins.
+5. **Real game mode (probably the session after).** Single-banana fire on player input, wire `Banana.OnWin → LevelOverlay.ShowWin` and `OnLose → LevelOverlay.ShowLose`, level timer, success/fail UI. Skip if running short on jam time — playtest mode is enough for the demo.
+
+Don't do this session:
+- Art (artist).
+- Audio.
+- Multi-level support.
+
+When you're done, append a session-log entry as usual.

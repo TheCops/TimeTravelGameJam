@@ -1,5 +1,6 @@
 using UnityEngine;
-using TimeTravelBanana.Timeline;
+using UnityEngine.UI;
+using TimeTravelBanana.UI;
 
 namespace TimeTravelBanana.Game
 {
@@ -10,14 +11,12 @@ namespace TimeTravelBanana.Game
         [SerializeField] private float ceilingY = 5f;
         [SerializeField] private float leftWallX = -10f;
         [SerializeField] private float rightWallX = 10f;
-        [SerializeField] private float bakeDuration = 10f;
+        [SerializeField] private int trampolineStock = 3;
+        [SerializeField] private int blockStock = 3;
 
         private void Awake()
         {
             if (Object.FindFirstObjectByType<GameStateController>() != null) return;
-
-            var timelineGo = new GameObject("TimelineManager");
-            var timeline = timelineGo.AddComponent<TimelineManager>();
 
             if (buildFloorAndWalls)
             {
@@ -31,25 +30,93 @@ namespace TimeTravelBanana.Game
 
             CreateBucket(new Vector2(8f, -3.0f));
 
-            var banana = CreateBanana(new Vector2(-8f, -2.5f));
-
             var launcherGo = new GameObject("Launcher");
             launcherGo.transform.position = new Vector3(-8f, -2.5f, 0f);
             var launcher = launcherGo.AddComponent<Launcher>();
-            launcher.SetBanana(banana);
             launcher.SetLaunchAngle(60f);
             launcher.SetLaunchSpeed(13f);
 
-            var trampoline = CreateTrampoline(new Vector2(-2f, 1f), timeline);
-            var rocket     = CreateRocket(new Vector2(3f, -2f), timeline);
-
-            var timeControlGo = new GameObject("ObjectTimeController");
-            var timeControl = timeControlGo.AddComponent<ObjectTimeController>();
-            timeControl.SetTimeline(timeline);
-
             var stateGo = new GameObject("GameStateController");
             var state = stateGo.AddComponent<GameStateController>();
-            state.Configure(timeline, launcher, timeControl, new[] { trampoline, rocket }, bake: bakeDuration);
+            state.Configure(launcher, null);
+
+            BuildTray(state);
+            BuildPlaytester(state, launcher);
+        }
+
+        private void BuildTray(GameStateController state)
+        {
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            if (canvas == null)
+            {
+                Debug.LogWarning("SceneBootstrap: no Canvas in scene; tray UI will not be built.");
+                return;
+            }
+
+            var panelGo = new GameObject("TrayPanel", typeof(RectTransform), typeof(Image));
+            var panelRt = (RectTransform)panelGo.transform;
+            panelRt.SetParent(canvas.transform, false);
+            panelRt.anchorMin = new Vector2(0f, 0f);
+            panelRt.anchorMax = new Vector2(0f, 1f);
+            panelRt.pivot = new Vector2(0f, 0.5f);
+            panelRt.sizeDelta = new Vector2(150f, 0f);
+            panelRt.anchoredPosition = Vector2.zero;
+            panelGo.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.5f);
+            panelRt.SetAsFirstSibling();
+
+            var trayGo = new GameObject("TrayController");
+            var tray = trayGo.AddComponent<TrayController>();
+
+            var entries = new System.Collections.Generic.List<TrayController.Entry>
+            {
+                new TrayController.Entry
+                {
+                    label = "Trampoline",
+                    stock = trampolineStock,
+                    iconColor = new Color(0.3f, 0.7f, 1f),
+                    spawn = pos => Spawner.Trampoline(pos)
+                },
+                new TrayController.Entry
+                {
+                    label = "Block",
+                    stock = blockStock,
+                    iconColor = new Color(0.85f, 0.7f, 0.4f),
+                    spawn = pos => Spawner.Block(pos)
+                },
+            };
+            tray.Configure(panelRt, state, Camera.main, entries);
+        }
+
+        private void BuildPlaytester(GameStateController state, Launcher launcher)
+        {
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            if (canvas == null) return;
+
+            var btnGo = new GameObject("PlayButton", typeof(RectTransform), typeof(Image), typeof(Button));
+            var rt = (RectTransform)btnGo.transform;
+            rt.SetParent(canvas.transform, false);
+            rt.anchorMin = new Vector2(0.5f, 1f);
+            rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.sizeDelta = new Vector2(220f, 70f);
+            rt.anchoredPosition = new Vector2(0f, -20f);
+            btnGo.GetComponent<Image>().color = new Color(0.15f, 0.5f, 0.25f, 0.95f);
+
+            var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            var labelRt = (RectTransform)labelGo.transform;
+            labelRt.SetParent(rt, false);
+            labelRt.anchorMin = Vector2.zero; labelRt.anchorMax = Vector2.one;
+            labelRt.offsetMin = labelRt.offsetMax = Vector2.zero;
+            var label = labelGo.GetComponent<Text>();
+            label.text = "PLAY";
+            label.alignment = TextAnchor.MiddleCenter;
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 32;
+            label.color = Color.white;
+
+            var ptGo = new GameObject("Playtester");
+            var pt = ptGo.AddComponent<Playtester>();
+            pt.Configure(state, launcher, btnGo.GetComponent<Button>(), label);
         }
 
         private static void CreateStaticBox(string name, Vector2 pos, Vector2 size, Color color, bool bouncy = false)
@@ -93,86 +160,6 @@ namespace TimeTravelBanana.Game
             sr.sprite = SpriteFactory.WhiteSquare;
             sr.color = color;
             go.AddComponent<BoxCollider2D>();
-        }
-
-        private static Banana CreateBanana(Vector2 pos)
-        {
-            var go = new GameObject("Banana");
-            go.SetActive(false);
-            go.transform.position = pos;
-            go.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
-
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.WhiteCircle;
-            sr.color = new Color(1f, 0.85f, 0.1f);
-            sr.sortingOrder = 5;
-
-            var col = go.AddComponent<CircleCollider2D>();
-            col.radius = 0.5f;
-
-            var rb = go.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 1f;
-            rb.bodyType = RigidbodyType2D.Dynamic;
-
-            var banana = go.AddComponent<Banana>();
-            go.SetActive(true);
-            return banana;
-        }
-
-        private static PlanningDraggable CreateTrampoline(Vector2 pos, TimelineManager timeline)
-        {
-            var go = new GameObject("Trampoline");
-            go.SetActive(false);
-            go.transform.position = pos;
-            go.transform.localScale = new Vector3(2.4f, 0.4f, 1f);
-
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.WhiteSquare;
-            sr.color = new Color(0.3f, 0.7f, 1f);
-            sr.sortingOrder = 2;
-
-            var col = go.AddComponent<BoxCollider2D>();
-            col.sharedMaterial = new PhysicsMaterial2D("Bouncy") { bounciness = 0.95f, friction = 0.1f };
-
-            var rb = go.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 1f;
-            rb.bodyType = RigidbodyType2D.Dynamic;
-
-            var rec = go.AddComponent<RigidbodyTimelineRecorder>();
-            rec.Timeline = timeline;
-
-            var drag = go.AddComponent<PlanningDraggable>();
-            go.SetActive(true);
-            return drag;
-        }
-
-        private static PlanningDraggable CreateRocket(Vector2 pos, TimelineManager timeline)
-        {
-            var go = new GameObject("Rocket");
-            go.SetActive(false);
-            go.transform.position = pos;
-            go.transform.localScale = new Vector3(0.6f, 1.2f, 1f);
-
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.WhiteSquare;
-            sr.color = new Color(1f, 0.4f, 0.3f);
-            sr.sortingOrder = 2;
-
-            go.AddComponent<BoxCollider2D>();
-
-            var rb = go.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 1f;
-            rb.bodyType = RigidbodyType2D.Dynamic;
-
-            var force = go.AddComponent<ConstantForce2D>();
-            force.relativeForce = new Vector2(0f, 12f);
-
-            var rec = go.AddComponent<RigidbodyTimelineRecorder>();
-            rec.Timeline = timeline;
-
-            var drag = go.AddComponent<PlanningDraggable>();
-            go.SetActive(true);
-            return drag;
         }
     }
 }

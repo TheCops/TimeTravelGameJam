@@ -1,9 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using TimeTravelBanana.Timeline;
 
-namespace TimeTravelBanana.Game
-{
+
     public class ObjectTimeController : MonoBehaviour
     {
         [SerializeField] private TimelineManager timeline;
@@ -56,4 +54,4 @@ namespace TimeTravelBanana.Game
             timeline.CurrentTime = objectTime;
         }
     }
-}
+

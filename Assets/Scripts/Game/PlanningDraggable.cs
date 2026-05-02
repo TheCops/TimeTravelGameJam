@@ -1,8 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace TimeTravelBanana.Game
-{
+
     [RequireComponent(typeof(Collider2D))]
     public class PlanningDraggable : MonoBehaviour
     {
@@ -19,10 +18,47 @@ namespace TimeTravelBanana.Game
             if (!enabled) dragging = false;
         }
 
+        public void ReactToPlacingState()  { SetDragEnabled(true);  }
+        public void ReactToPlayingState()  { SetDragEnabled(false); }
+        public void ReactToResolvedState() { SetDragEnabled(false); }
+        public void ReactToPausedState()   { SetDragEnabled(false); }
+
         private void Awake()
         {
             col = GetComponent<Collider2D>();
             if (dragCamera == null) dragCamera = Camera.main;
+        }
+
+        private void Start()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+
+            gm.RegisterDraggable(this);
+            gm.OnPlacingState  += ReactToPlacingState;
+            gm.OnPlayingState  += ReactToPlayingState;
+            gm.OnResolvedState += ReactToResolvedState;
+            gm.OnPausedState   += ReactToPausedState;
+
+            switch (gm.State)
+            {
+                case GameState.Placing:  ReactToPlacingState();  break;
+                case GameState.Playing:  ReactToPlayingState();  break;
+                case GameState.Resolved: ReactToResolvedState(); break;
+                case GameState.Paused:   ReactToPausedState();   break;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+
+            gm.OnPlacingState  -= ReactToPlacingState;
+            gm.OnPlayingState  -= ReactToPlayingState;
+            gm.OnResolvedState -= ReactToResolvedState;
+            gm.OnPausedState   -= ReactToPausedState;
+            gm.UnregisterDraggable(this);
         }
 
         private void Update()
@@ -54,4 +90,4 @@ namespace TimeTravelBanana.Game
             }
         }
     }
-}
+

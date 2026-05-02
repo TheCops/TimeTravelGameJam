@@ -1,7 +1,6 @@
 using UnityEngine;
 
-namespace TimeTravelBanana.Game
-{
+
     public class Launcher : MonoBehaviour
     {
         [SerializeField] private float launchAngleDegrees = 60f;
@@ -19,7 +18,7 @@ namespace TimeTravelBanana.Game
             if (banana == null) return;
             float rad = launchAngleDegrees * Mathf.Deg2Rad;
             Vector2 velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * launchSpeed;
-            banana.Launch(transform.position, velocity);
+            banana.Launch();
         }
 
         private void OnDrawGizmos()
@@ -31,4 +30,3 @@ namespace TimeTravelBanana.Game
             Gizmos.DrawWireSphere(transform.position, 0.25f);
         }
     }
-}

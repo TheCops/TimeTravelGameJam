@@ -5,16 +5,9 @@ namespace TimeTravelBanana.Game
 {
     public static class SceneBootstrap
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void Build()
+        private static void Awake()
         {
             if (Object.FindFirstObjectByType<GameStateController>() != null) return;
-
-            ConfigureCamera();
-
-            CreateStaticBox("Floor",     new Vector2(0f,  -4f), new Vector2(28f, 1f),  new Color(0.25f, 0.25f, 0.30f));
-            CreateStaticBox("LeftWall",  new Vector2(-13f, 0f), new Vector2(1f,  12f), new Color(0.25f, 0.25f, 0.30f));
-            CreateStaticBox("RightWall", new Vector2(13f,  0f), new Vector2(1f,  12f), new Color(0.25f, 0.25f, 0.30f));
 
             var timelineGo = new GameObject("TimelineManager");
             var timeline = timelineGo.AddComponent<TimelineManager>();
@@ -40,23 +33,6 @@ namespace TimeTravelBanana.Game
             var stateGo = new GameObject("GameStateController");
             var state = stateGo.AddComponent<GameStateController>();
             state.Configure(timeline, launcher, timeControl, new[] { trampoline, rocket }, bake: 10f);
-        }
-
-        private static void ConfigureCamera()
-        {
-            var cam = Camera.main;
-            if (cam == null)
-            {
-                var go = new GameObject("Main Camera");
-                go.tag = "MainCamera";
-                cam = go.AddComponent<Camera>();
-                go.AddComponent<AudioListener>();
-            }
-            cam.orthographic = true;
-            cam.orthographicSize = 7f;
-            cam.transform.position = new Vector3(0f, 0f, -10f);
-            cam.backgroundColor = new Color(0.05f, 0.07f, 0.12f);
-            cam.clearFlags = CameraClearFlags.SolidColor;
         }
 
         private static void CreateStaticBox(string name, Vector2 pos, Vector2 size, Color color)

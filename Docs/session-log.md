@@ -57,3 +57,57 @@ Don't do this session:
 - Art (artist will swap sprites later).
 
 When you're done, append a new entry to `Docs/session-log.md` describing what shipped, what state the scenes are in, any gotchas hit, and a prompt for whoever picks up next.
+
+---
+
+## 2026-05-02 (later) — Scene scaffolding (code side)
+
+**Who:** DJ + Claude (dj-ui)
+
+**What shipped (code only — DJ still needs to click two menu items in Unity to materialize the scenes):**
+
+- `Assets/Scripts/Game/SceneBootstrap.cs` rewritten as a real `MonoBehaviour`. `Awake()` builds floor, ceiling (bouncy), left/right walls, bucket, banana, launcher, trampoline, rocket, `TimelineManager`, `ObjectTimeController`, `GameStateController`. Bounds default to x∈[-10,10], y∈[-4,5] and are `[SerializeField]`-tunable on the component. `bakeDuration` still passed through to `GameStateController` — left intact per the dead-code call-out in the previous entry; we did not refactor `LaunchSequence`'s bake/playback path.
+- `Assets/Scripts/UI/MainMenuController.cs`: Play / Instructions / Quit, with an instructions panel that toggles a placeholder text + Back button. Play loads scene named `Level1`.
+- `Assets/Scripts/UI/LevelOverlay.cs`: stub overlay with `ShowWin()` / `ShowLose()` hooks. Holds win and lose panels, accepts arrays of "main menu" and "retry" buttons so both panels' buttons can resolve to the same handlers. Not yet wired to the `Banana.OnWin` / `OnLose` events — that hookup is P0.5's job.
+- `Assets/Scripts/Editor/SceneSetupTool.cs`: editor menu under `TimeTravelBanana → Scenes`. Creates `MainMenu.unity` and `Level1.unity`, builds the Canvas + EventSystem + buttons + panels, drops the `SceneBootstrap` and `LevelOverlay`/`MainMenuController` GameObjects, wires their `[SerializeField]` references via `SerializedObject`, saves the scene file, and registers it in Build Settings at the right index.
+
+**What DJ must do in Unity (once this branch is checked out and Unity has imported):**
+
+1. Open Unity. Top menu: **TimeTravelBanana → Scenes → Create Both Scenes**. This creates `Assets/Scenes/MainMenu.unity` and `Level1.unity`, and registers them in Build Settings as index 0 and 1.
+2. Delete `Assets/Scenes/SampleScene.unity` (and its `.meta`).
+3. Open `MainMenu.unity`, press Play, click **PLAY**, confirm `Level1` loads with the banana, launcher, trampoline, rocket, walls, floor, bucket visible.
+4. Commit.
+
+**State of dead code:** Untouched. `TimelineManager`, `RigidbodyTimelineRecorder`, `BakeFor`, `ObjectTimeController.BeginPlayback`, `GameStateController.LaunchSequence`'s bake-and-replay path are all still wired through `SceneBootstrap`. They will run when SPACE is pressed and probably do something visually janky under the new live-physics design intent. Don't fix here; that's the worldTimeRate session.
+
+**Gotchas / decisions:**
+
+- Took the runtime-spawn path (option A from the previous prompt), not editor-placed objects. Reason: faster to get back to playable, and the artist's sprite swap can happen later via `SpriteFactory` or by editor-placing the level once art lands.
+- The original bootstrap had no floor/walls/ceiling — the banana would have fallen forever. Added them here. The ceiling has a bouncy `PhysicsMaterial2D` (0.85 bounciness) per the gamedoc "ceiling as level constraint" idea.
+- Did not commit `.unity` scene files from CLI. Hand-rolling Unity scene YAML is brittle and would have eaten time. The editor menu tool is the safe substitute — DJ runs it once in Unity and gets clean scenes with proper GUIDs.
+- `LevelOverlay` does not yet self-subscribe to banana events. The session prompt explicitly said "stub the overlay hooks" so we left `ShowWin()`/`ShowLose()` as public methods with no caller.
+- **Input System gotcha:** project has `Active Input Handling` set to the new Input System package (visible in `PlanningDraggable.cs`'s `UnityEngine.InputSystem` usage). The editor tool initially added the legacy `StandaloneInputModule` to the EventSystem, which spammed `InvalidOperationException` 1k+ times per frame. Fixed by swapping to `InputSystemUIInputModule` from `UnityEngine.InputSystem.UI`. If you ever extend the editor tool to make a third UI scene, use `InputSystemUIInputModule`.
+- **Scene convention:** `Level1.unity` is the canonical level scene. `SampleScene.unity` is Clarke's sandbox — leave it alone, do not delete it. All level work goes in `Level1`. If we need throwaway scenes later, name them `Sandbox*.unity` and keep them out of Build Settings.
+
+---
+
+### Prompt for next session
+
+You're picking up the Time-Travel Banana jam. Read `Docs/gamedoc.md` for design and the entries above for current state. **Confirm with DJ that the scene-creation menu items have been run in Unity and `MainMenu.unity` + `Level1.unity` exist on disk before starting.** If not, run them yourself (TimeTravelBanana → Scenes → Create Both Scenes) and commit the scene files.
+
+Your job this session: **rip out the bake/scrub timeline path and replace it with live-physics + a global `worldTimeRate`** (P2 work from the previous session's deferred list). Concretely:
+
+1. **Add `worldTimeRate` plumbing.** Pick a home — most likely `ObjectTimeController` (already exists, already references the timeline). Single `public static float WorldTimeRate { get; private set; } = 1f;` or similar. Default 1.0. Reset to 1.0 on level reset / `EnterPlanning`.
+2. **Rewrite `GameStateController.LaunchSequence`** to skip baking. New flow: disable draggables, call `launcher.Launch()`, set state to `Playing`. The banana's rigidbody just runs against live physics. Delete the call to `timeline.BakeFor` and the call to `timeController.BeginPlayback`.
+3. **Make cyclical objects read `worldTimeRate`.** Rocket's `ConstantForce2D` and any future moving platform/balloon need to scale their behavior by `worldTimeRate` (and flip direction when negative). The trampoline is passive — leave it. For now this means giving the rocket its own `RocketBehaviour` script that applies force itself instead of relying on `ConstantForce2D`, scaled by `worldTimeRate`.
+4. **Decide what to do with `TimelineManager` / `RigidbodyTimelineRecorder` / `BakeFor`.** If nothing else needs them, delete them — including their references in `SceneBootstrap`. If you're nervous, `#if false` them out. Don't leave them quietly running.
+5. **Add a level timer.** Simple `[SerializeField] float levelDurationSeconds = 30f;` on `GameStateController` (or a new `LevelTimer` component). Counts down only during `Playing`. When it hits zero, fire the lose path (currently `HandleLose`). Show the timer in the level UI — quick `Text` element in the Canvas top-center is enough.
+6. **Wire `LevelOverlay` to the banana events.** `LevelOverlay` should subscribe to `launcher.Banana.OnWin → ShowWin` and `OnLose → ShowLose`. Either via `SerializeField GameStateController` reference, or by `FindFirstObjectByType` in `Start()`.
+7. **Sanity-check.** Press Play in `MainMenu`, click PLAY, land in `Level1`, press SPACE. Banana should fly under live physics. Land it in the bucket → win panel shows. Miss it / time runs out → lose panel shows. Main Menu button on either panel goes back. Retry reloads `Level1`.
+
+Don't do this session:
+- Time blocks themselves (slow/fast/reverse triggers). Get the global `worldTimeRate` plumbing in place first; the actual block prefabs and triggers are the session after this.
+- Tray UX (P1).
+- Art (artist).
+
+When you're done, append a new entry describing what shipped, what state the gameplay loop is in, any gotchas, and a prompt for the next session — likely the time-block triggers.

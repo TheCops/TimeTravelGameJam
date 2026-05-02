@@ -3,14 +3,31 @@ using TimeTravelBanana.Timeline;
 
 namespace TimeTravelBanana.Game
 {
-    public static class SceneBootstrap
+    public class SceneBootstrap : MonoBehaviour
     {
-        private static void Awake()
+        [SerializeField] private bool buildFloorAndWalls = true;
+        [SerializeField] private float floorY = -4f;
+        [SerializeField] private float ceilingY = 5f;
+        [SerializeField] private float leftWallX = -10f;
+        [SerializeField] private float rightWallX = 10f;
+        [SerializeField] private float bakeDuration = 10f;
+
+        private void Awake()
         {
             if (Object.FindFirstObjectByType<GameStateController>() != null) return;
 
             var timelineGo = new GameObject("TimelineManager");
             var timeline = timelineGo.AddComponent<TimelineManager>();
+
+            if (buildFloorAndWalls)
+            {
+                float width = rightWallX - leftWallX;
+                float height = ceilingY - floorY;
+                CreateStaticBox("Floor",   new Vector2((leftWallX + rightWallX) * 0.5f, floorY),    new Vector2(width, 0.5f),  new Color(0.3f, 0.25f, 0.2f));
+                CreateStaticBox("Ceiling", new Vector2((leftWallX + rightWallX) * 0.5f, ceilingY),  new Vector2(width, 0.5f),  new Color(0.3f, 0.25f, 0.2f), bouncy: true);
+                CreateStaticBox("LeftWall",  new Vector2(leftWallX,  (floorY + ceilingY) * 0.5f), new Vector2(0.5f, height), new Color(0.3f, 0.25f, 0.2f));
+                CreateStaticBox("RightWall", new Vector2(rightWallX, (floorY + ceilingY) * 0.5f), new Vector2(0.5f, height), new Color(0.3f, 0.25f, 0.2f));
+            }
 
             CreateBucket(new Vector2(8f, -3.0f));
 
@@ -32,10 +49,10 @@ namespace TimeTravelBanana.Game
 
             var stateGo = new GameObject("GameStateController");
             var state = stateGo.AddComponent<GameStateController>();
-            state.Configure(timeline, launcher, timeControl, new[] { trampoline, rocket }, bake: 10f);
+            state.Configure(timeline, launcher, timeControl, new[] { trampoline, rocket }, bake: bakeDuration);
         }
 
-        private static void CreateStaticBox(string name, Vector2 pos, Vector2 size, Color color)
+        private static void CreateStaticBox(string name, Vector2 pos, Vector2 size, Color color, bool bouncy = false)
         {
             var go = new GameObject(name);
             go.transform.position = pos;
@@ -43,7 +60,9 @@ namespace TimeTravelBanana.Game
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = SpriteFactory.WhiteSquare;
             sr.color = color;
-            go.AddComponent<BoxCollider2D>();
+            var col = go.AddComponent<BoxCollider2D>();
+            if (bouncy)
+                col.sharedMaterial = new PhysicsMaterial2D("CeilingBounce") { bounciness = 0.85f, friction = 0.1f };
         }
 
         private static void CreateBucket(Vector2 pos)

@@ -49,7 +49,7 @@ namespace TimeTravelBanana.Timeline
             timeline = tm;
             OnConnected();
             timeline.Register(this);
-            if (timeline.Mode == TimelineMode.Scrubbing) OnEnterScrubbing();
+            if (timeline.Mode != TimelineMode.Recording) OnEnterScrubbing();
         }
 
         protected virtual void OnEnable()
@@ -57,7 +57,7 @@ namespace TimeTravelBanana.Timeline
             if (timeline == null) return;
             OnConnected();
             timeline.Register(this);
-            if (timeline.Mode == TimelineMode.Scrubbing) OnEnterScrubbing();
+            if (timeline.Mode != TimelineMode.Recording) OnEnterScrubbing();
         }
 
         protected virtual void OnDisable()
@@ -71,8 +71,10 @@ namespace TimeTravelBanana.Timeline
 
         public void OnTimelineModeChanged(TimelineMode previous, TimelineMode next)
         {
-            if (previous != TimelineMode.Scrubbing && next == TimelineMode.Scrubbing) OnEnterScrubbing();
-            else if (previous == TimelineMode.Scrubbing && next != TimelineMode.Scrubbing) OnExitScrubbing();
+            bool wasFrozen = previous != TimelineMode.Recording;
+            bool isFrozen = next != TimelineMode.Recording;
+            if (!wasFrozen && isFrozen) OnEnterScrubbing();
+            else if (wasFrozen && !isFrozen) OnExitScrubbing();
         }
 
         protected virtual void OnConnected() { }

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TimeTravelBanana.Game
 {
-    internal static class SpriteFactory
+    public static class SpriteFactory
     {
         private static Sprite _whiteSquare;
         private static Sprite _whiteCircle;

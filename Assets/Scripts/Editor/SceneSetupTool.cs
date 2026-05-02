@@ -122,6 +122,133 @@ namespace TimeTravelBanana.EditorTools
             CreateLevel1Scene();
         }
 
+        [MenuItem("TimeTravelBanana/Tools/Place Level Kit In Current Scene")]
+        public static void PlaceLevelKit()
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            if (!scene.IsValid())
+            {
+                Debug.LogWarning("PlaceLevelKit: no active scene.");
+                return;
+            }
+
+            EnsureStaticBox("Floor",     new Vector2(0f, -4f), new Vector2(20f, 0.5f), new Color(0.3f, 0.25f, 0.2f));
+            EnsureStaticBox("Ceiling",   new Vector2(0f,  5f), new Vector2(20f, 0.5f), new Color(0.3f, 0.25f, 0.2f), bouncy: true);
+            EnsureStaticBox("LeftWall",  new Vector2(-10f, 0.5f), new Vector2(0.5f, 9f), new Color(0.3f, 0.25f, 0.2f));
+            EnsureStaticBox("RightWall", new Vector2( 10f, 0.5f), new Vector2(0.5f, 9f), new Color(0.3f, 0.25f, 0.2f));
+            EnsureBucket("Bucket", new Vector2(8f, -3f));
+
+            var launcher = EnsureLauncher("Launcher", new Vector2(-8f, -2.5f), 60f, 13f);
+            EnsureGameManager(launcher);
+
+            EnsureCanvasUiControllers();
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            Debug.Log("Placed level kit into " + scene.name);
+        }
+
+        private static GameObject FindRoot(string name)
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            foreach (var go in scene.GetRootGameObjects())
+                if (go.name == name) return go;
+            return null;
+        }
+
+        private static void EnsureStaticBox(string name, Vector2 pos, Vector2 size, Color color, bool bouncy = false)
+        {
+            if (FindRoot(name) != null) return;
+            var go = new GameObject(name);
+            go.transform.position = pos;
+            go.transform.localScale = new Vector3(size.x, size.y, 1f);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = SpriteFactory.WhiteSquare;
+            sr.color = color;
+            var col = go.AddComponent<BoxCollider2D>();
+            if (bouncy)
+                col.sharedMaterial = new PhysicsMaterial2D("CeilingBounce") { bounciness = 0.85f, friction = 0.1f };
+        }
+
+        private static void EnsureBucket(string name, Vector2 pos)
+        {
+            if (FindRoot(name) != null) return;
+            var root = new GameObject(name);
+            root.transform.position = pos;
+            CreateChildBox(root, "Bottom", new Vector3(0f,    0f,   0f), new Vector2(2.0f, 0.3f), Color.cyan);
+            CreateChildBox(root, "Left",   new Vector3(-0.85f, 0.7f, 0f), new Vector2(0.3f, 1.4f), Color.cyan);
+            CreateChildBox(root, "Right",  new Vector3(0.85f,  0.7f, 0f), new Vector2(0.3f, 1.4f), Color.cyan);
+
+            var trigger = new GameObject("Trigger");
+            trigger.transform.SetParent(root.transform, false);
+            trigger.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            var triggerCol = trigger.AddComponent<BoxCollider2D>();
+            triggerCol.size = new Vector2(1.4f, 0.6f);
+            triggerCol.isTrigger = true;
+            trigger.AddComponent<Bucket>();
+        }
+
+        private static void CreateChildBox(GameObject parent, string name, Vector3 localPos, Vector2 size, Color color)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent.transform, false);
+            go.transform.localPosition = localPos;
+            go.transform.localScale = new Vector3(size.x, size.y, 1f);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = SpriteFactory.WhiteSquare;
+            sr.color = color;
+            go.AddComponent<BoxCollider2D>();
+        }
+
+        private static Launcher EnsureLauncher(string name, Vector2 pos, float angle, float speed)
+        {
+            var existing = FindRoot(name);
+            if (existing != null)
+            {
+                var l = existing.GetComponent<Launcher>();
+                if (l == null) l = existing.AddComponent<Launcher>();
+                return l;
+            }
+            var go = new GameObject(name);
+            go.transform.position = pos;
+            var launcher = go.AddComponent<Launcher>();
+            launcher.SetLaunchAngle(angle);
+            launcher.SetLaunchSpeed(speed);
+            return launcher;
+        }
+
+        private static void EnsureGameManager(Launcher launcher)
+        {
+            var existing = FindRoot("GameManager");
+            GameManager gm;
+            if (existing != null)
+            {
+                gm = existing.GetComponent<GameManager>();
+                if (gm == null) gm = existing.AddComponent<GameManager>();
+            }
+            else
+            {
+                var go = new GameObject("GameManager");
+                gm = go.AddComponent<GameManager>();
+            }
+            var so = new SerializedObject(gm);
+            var prop = so.FindProperty("launcher");
+            if (prop != null && prop.objectReferenceValue == null)
+            {
+                prop.objectReferenceValue = launcher;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        private static void EnsureCanvasUiControllers()
+        {
+            var canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+            if (canvas == null) return;
+            var go = canvas.gameObject;
+            if (go.GetComponent<TrayController>() == null) go.AddComponent<TrayController>();
+            if (go.GetComponent<Playtester>() == null)     go.AddComponent<Playtester>();
+            if (go.GetComponent<ScoreTracker>() == null)   go.AddComponent<ScoreTracker>();
+        }
+
         private static void EnsureScenesFolder()
         {
             if (!AssetDatabase.IsValidFolder(ScenesFolder))

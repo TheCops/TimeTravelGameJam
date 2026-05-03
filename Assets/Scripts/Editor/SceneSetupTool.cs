@@ -122,6 +122,52 @@ namespace TimeTravelBanana.EditorTools
             CreateLevel1Scene();
         }
 
+        [MenuItem("TimeTravelBanana/Tools/Add Background To Current Scene")]
+        public static void AddBackgroundToCurrentScene()
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            if (!scene.IsValid())
+            {
+                Debug.LogWarning("AddBackgroundToCurrentScene: no active scene.");
+                return;
+            }
+
+            if (FindRoot("LevelBackground") != null)
+            {
+                Debug.Log("LevelBackground already exists in " + scene.name + " — leaving it alone.");
+                return;
+            }
+
+            const string spritePath = "Assets/Resources/Art/background.png";
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            if (sprite == null)
+            {
+                Debug.LogError("Could not load Sprite at " + spritePath + ". Make sure Texture Type is Sprite (2D and UI) in the Inspector.");
+                return;
+            }
+
+            var go = new GameObject("LevelBackground");
+            go.transform.position = new Vector3(0f, 0f, 10f);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = -100;
+
+            var cam = Camera.main;
+            if (cam != null && cam.orthographic)
+            {
+                float worldH = cam.orthographicSize * 2f;
+                float worldW = worldH * cam.aspect;
+                float spriteW = sprite.bounds.size.x;
+                float spriteH = sprite.bounds.size.y;
+                float scale = Mathf.Max(worldW / spriteW, worldH / spriteH);
+                go.transform.localScale = new Vector3(scale, scale, 1f);
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            Selection.activeGameObject = go;
+            Debug.Log("Added LevelBackground to " + scene.name + ". Adjust its Transform; the change will save with the scene.");
+        }
+
         [MenuItem("TimeTravelBanana/Tools/Place Level Kit In Current Scene")]
         public static void PlaceLevelKit()
         {

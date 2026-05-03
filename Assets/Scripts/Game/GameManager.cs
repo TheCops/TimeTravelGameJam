@@ -55,6 +55,33 @@ namespace TimeTravelBanana.Game
             ApplyStateToTimeline(State);
 
             ActivateHiddenCanvases();
+            EnsureBackground();
+        }
+
+        private static void EnsureBackground()
+        {
+            if (GameObject.Find("LevelBackground") != null) return;
+            var sprite = Resources.Load<Sprite>("Art/background");
+            if (sprite == null) return;
+
+            var cam = Camera.main;
+            var go = new GameObject("LevelBackground");
+            if (cam != null) go.transform.position = new Vector3(cam.transform.position.x, cam.transform.position.y, 10f);
+            else go.transform.position = new Vector3(0f, 0f, 10f);
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = -100;
+
+            if (cam != null && cam.orthographic)
+            {
+                float worldH = cam.orthographicSize * 2f;
+                float worldW = worldH * cam.aspect;
+                float spriteW = sprite.bounds.size.x;
+                float spriteH = sprite.bounds.size.y;
+                float scale = Mathf.Max(worldW / spriteW, worldH / spriteH);
+                go.transform.localScale = new Vector3(scale, scale, 1f);
+            }
         }
 
         private static void ActivateHiddenCanvases()

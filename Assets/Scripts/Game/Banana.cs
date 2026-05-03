@@ -71,6 +71,23 @@ namespace TimeTravelBanana.Game
             sr = GetComponent<SpriteRenderer>();
         }
 
+        private void OnEnable()
+        {
+            var gm = GameManager.Instance;
+            if (gm != null) gm.OnPlayingState += HandleEnterPlaying;
+        }
+
+        private void OnDisable()
+        {
+            var gm = GameManager.Instance;
+            if (gm != null) gm.OnPlayingState -= HandleEnterPlaying;
+        }
+
+        private void HandleEnterPlaying()
+        {
+            Destroy(gameObject);
+        }
+
         public void Launch(Vector2 spawnPos, Vector2 velocity)
         {
             transform.position = spawnPos;

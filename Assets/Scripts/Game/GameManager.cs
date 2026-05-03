@@ -17,17 +17,13 @@ namespace TimeTravelBanana.Game
     {
         public static GameManager Instance { get; private set; }
 
-        [SerializeField] private Launcher launcher;
         [SerializeField, Min(1)] private int tickRate = 50;
         [SerializeField, Min(1)] private int maxBufferSeconds = 30;
-        [SerializeField] private float defaultRate = 1f;
-        [SerializeField] private float fastForwardRate = 2.5f;
-        [SerializeField] private float rewindRate = -2f;
 
         private readonly List<PlanningDraggable> draggables = new List<PlanningDraggable>();
 
         public GameState State { get; private set; } = GameState.Placing;
-        public Launcher Launcher => launcher;
+        public Launcher Launcher { get; private set; }
         public Camera SceneCamera { get; private set; }
         public TimelineManager Timeline { get; private set; }
         public ObjectTimeController TimeController { get; private set; }
@@ -50,16 +46,11 @@ namespace TimeTravelBanana.Game
                 ? Camera.main
                 : UnityEngine.Object.FindFirstObjectByType<Camera>();
 
-            var timelineGo = new GameObject("TimelineManager");
-            timelineGo.transform.SetParent(transform, false);
-            Timeline = timelineGo.AddComponent<TimelineManager>();
+            Timeline = gameObject.AddComponent<TimelineManager>();
             Timeline.Configure(tickRate, maxBufferSeconds);
 
-            var timeControllerGo = new GameObject("ObjectTimeController");
-            timeControllerGo.transform.SetParent(transform, false);
-            TimeController = timeControllerGo.AddComponent<ObjectTimeController>();
+            TimeController = gameObject.AddComponent<ObjectTimeController>();
             TimeController.SetTimeline(Timeline);
-            TimeController.SetRates(defaultRate, fastForwardRate, rewindRate);
 
             ApplyStateToTimeline(State);
 
@@ -83,7 +74,7 @@ namespace TimeTravelBanana.Game
 
         private void Start()
         {
-            EnterPlanning(force: true);
+            EnterPlacing(force: true);
         }
 
         private void Update()
@@ -94,12 +85,25 @@ namespace TimeTravelBanana.Game
             if (kb.spaceKey.wasPressedThisFrame)
             {
                 if (State == GameState.Placing) EnterPlaytest();
-                else if (State == GameState.Playing) EnterPlanning();
+                else if (State == GameState.Playing) EnterPlacing();
             }
             else if (kb.rKey.wasPressedThisFrame && State != GameState.Placing)
             {
-                EnterPlanning();
+                EnterPlacing();
             }
+        }
+
+        public void RegisterLauncher(Launcher l)
+        {
+            if (l == null) return;
+            if (Launcher != null && Launcher != l)
+                Debug.LogWarning("GameManager: replacing already-registered Launcher.");
+            Launcher = l;
+        }
+
+        public void UnregisterLauncher(Launcher l)
+        {
+            if (Launcher == l) Launcher = null;
         }
 
         public void RegisterDraggable(PlanningDraggable d)
@@ -123,7 +127,7 @@ namespace TimeTravelBanana.Game
             SetState(GameState.Playing);
         }
 
-        public void EnterPlanning() => EnterPlanning(force: false);
+        public void EnterPlacing() => EnterPlacing(force: false);
 
         public void EnterResolved()
         {
@@ -139,7 +143,7 @@ namespace TimeTravelBanana.Game
             SetState(GameState.Paused);
         }
 
-        private void EnterPlanning(bool force)
+        private void EnterPlacing(bool force)
         {
             if (!force && State == GameState.Placing) return;
             for (int i = 0; i < draggables.Count; i++)
@@ -167,7 +171,8 @@ namespace TimeTravelBanana.Game
             switch (s)
             {
                 case GameState.Placing:
-                    Timeline.ResetTimeline();
+                    if (TimeController != null) TimeController.ClearReverseScrub();
+                    Timeline.RewindAndClear();
                     break;
                 case GameState.Playing:
                     Timeline.SetCurrentTimeWithoutModeChange(0f);

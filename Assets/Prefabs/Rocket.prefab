@@ -78,7 +78,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a3322ccdbe1243e7ac974222a8b7b39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.Game.Rocket
-  thrust: 20
+  thrust: 10
   explosionScale: 1.5
   explosionLocation: {fileID: 1842178839786083106}
 --- !u!114 &7100000000000000006

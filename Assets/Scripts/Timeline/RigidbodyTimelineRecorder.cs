@@ -15,13 +15,12 @@ namespace TimeTravelBanana.Timeline
 
         private Rigidbody2D rb;
         private RigidbodyType2D defaultBodyType;
-        private Vector2 pendingLinearVelocity;
-        private float pendingAngularVelocity;
 
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
             defaultBodyType = rb.bodyType;
+            rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
         protected override Snapshot CaptureSnapshot() => new Snapshot
@@ -34,14 +33,26 @@ namespace TimeTravelBanana.Timeline
 
         protected override void ApplySnapshot(Snapshot snapshot)
         {
-            rb.position = snapshot.Position;
-            rb.rotation = snapshot.Rotation;
-            pendingLinearVelocity = snapshot.LinearVelocity;
-            pendingAngularVelocity = snapshot.AngularVelocity;
-            if (timeline.Mode == TimelineMode.Recording)
+            if (timeline.Mode == TimelineMode.Scrubbing)
             {
-                rb.linearVelocity = snapshot.LinearVelocity;
-                rb.angularVelocity = snapshot.AngularVelocity;
+                float dt = Time.fixedDeltaTime;
+                Vector2 implicitLinearVelocity = (snapshot.Position - rb.position) / dt;
+                float implicitAngularVelocity = Mathf.DeltaAngle(rb.rotation, snapshot.Rotation) / dt;
+
+                rb.MovePosition(snapshot.Position);
+                rb.MoveRotation(snapshot.Rotation);
+                rb.linearVelocity = implicitLinearVelocity;
+                rb.angularVelocity = implicitAngularVelocity;
+            }
+            else
+            {
+                rb.position = snapshot.Position;
+                rb.rotation = snapshot.Rotation;
+                if (timeline.Mode == TimelineMode.Recording)
+                {
+                    rb.linearVelocity = snapshot.LinearVelocity;
+                    rb.angularVelocity = snapshot.AngularVelocity;
+                }
             }
         }
 
@@ -56,17 +67,14 @@ namespace TimeTravelBanana.Timeline
         protected override void OnEnterScrubbing()
         {
             rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
         }
 
         protected override void OnExitScrubbing()
         {
             if (!IsCurrentlyAlive) return;
             rb.bodyType = defaultBodyType;
-            if (rb.bodyType == RigidbodyType2D.Dynamic)
-            {
-                rb.linearVelocity = pendingLinearVelocity;
-                rb.angularVelocity = pendingAngularVelocity;
-            }
         }
 
         protected override void OnLifecycleChanged(bool isAlive)

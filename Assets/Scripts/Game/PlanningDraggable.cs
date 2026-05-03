@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 
 namespace TimeTravelBanana.Game
 {
-    [RequireComponent(typeof(Collider2D))]
     public class PlanningDraggable : MonoBehaviour
     {
         [SerializeField] private Camera dragCamera;
@@ -55,10 +54,17 @@ namespace TimeTravelBanana.Game
 
         public void BeginDragFromSpawn()
         {
-            if (dragCamera == null) dragCamera = Camera.main;
+            if (dragCamera == null) dragCamera = ResolveCamera();
             dragEnabled = true;
             StartDragging();
             SnapToMouseNow();
+        }
+
+        private static Camera ResolveCamera()
+        {
+            var gm = GameManager.Instance;
+            if (gm != null && gm.SceneCamera != null) return gm.SceneCamera;
+            return Camera.main;
         }
 
         private void OnDestroy()
@@ -79,7 +85,7 @@ namespace TimeTravelBanana.Game
         {
             col = GetComponent<Collider2D>();
             rb = GetComponent<Rigidbody2D>();
-            if (dragCamera == null) dragCamera = Camera.main;
+            if (dragCamera == null) dragCamera = ResolveCamera();
         }
 
         private void Start()

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TimeTravelBanana.Timeline;
 
 namespace TimeTravelBanana.Game
 {
@@ -16,12 +17,16 @@ namespace TimeTravelBanana.Game
     {
         public static GameManager Instance { get; private set; }
 
-        [SerializeField] private Launcher launcher;
+        [SerializeField, Min(1)] private int tickRate = 50;
+        [SerializeField, Min(1)] private int maxBufferSeconds = 30;
 
         private readonly List<PlanningDraggable> draggables = new List<PlanningDraggable>();
 
         public GameState State { get; private set; } = GameState.Placing;
-        public Launcher Launcher => launcher;
+        public Launcher Launcher { get; private set; }
+        public Camera SceneCamera { get; private set; }
+        public TimelineManager Timeline { get; private set; }
+        public ObjectTimeController TimeController { get; private set; }
 
         public event System.Action OnPlacingState;
         public event System.Action OnPlayingState;
@@ -36,6 +41,19 @@ namespace TimeTravelBanana.Game
                 return;
             }
             Instance = this;
+
+            SceneCamera = Camera.main != null
+                ? Camera.main
+                : UnityEngine.Object.FindFirstObjectByType<Camera>();
+
+            Timeline = gameObject.AddComponent<TimelineManager>();
+            Timeline.Configure(tickRate, maxBufferSeconds);
+
+            TimeController = gameObject.AddComponent<ObjectTimeController>();
+            TimeController.SetTimeline(Timeline);
+
+            ApplyStateToTimeline(State);
+
             ActivateHiddenCanvases();
             EnsureBackground();
         }
@@ -83,7 +101,7 @@ namespace TimeTravelBanana.Game
 
         private void Start()
         {
-            EnterPlanning(force: true);
+            EnterPlacing(force: true);
         }
 
         private void Update()
@@ -94,12 +112,25 @@ namespace TimeTravelBanana.Game
             if (kb.spaceKey.wasPressedThisFrame)
             {
                 if (State == GameState.Placing) EnterPlaytest();
-                else if (State == GameState.Playing) EnterPlanning();
+                else if (State == GameState.Playing) EnterPlacing();
             }
             else if (kb.rKey.wasPressedThisFrame && State != GameState.Placing)
             {
-                EnterPlanning();
+                EnterPlacing();
             }
+        }
+
+        public void RegisterLauncher(Launcher l)
+        {
+            if (l == null) return;
+            if (Launcher != null && Launcher != l)
+                Debug.LogWarning("GameManager: replacing already-registered Launcher.");
+            Launcher = l;
+        }
+
+        public void UnregisterLauncher(Launcher l)
+        {
+            if (Launcher == l) Launcher = null;
         }
 
         public void RegisterDraggable(PlanningDraggable d)
@@ -123,7 +154,7 @@ namespace TimeTravelBanana.Game
             SetState(GameState.Playing);
         }
 
-        public void EnterPlanning() => EnterPlanning(force: false);
+        public void EnterPlacing() => EnterPlacing(force: false);
 
         public void EnterResolved()
         {
@@ -139,7 +170,7 @@ namespace TimeTravelBanana.Game
             SetState(GameState.Paused);
         }
 
-        private void EnterPlanning(bool force)
+        private void EnterPlacing(bool force)
         {
             if (!force && State == GameState.Placing) return;
             for (int i = 0; i < draggables.Count; i++)
@@ -151,12 +182,33 @@ namespace TimeTravelBanana.Game
         {
             if (State == s) return;
             State = s;
+            ApplyStateToTimeline(s);
             switch (s)
             {
                 case GameState.Placing:  OnPlacingState?.Invoke();  break;
                 case GameState.Playing:  OnPlayingState?.Invoke();  break;
                 case GameState.Resolved: OnResolvedState?.Invoke(); break;
                 case GameState.Paused:   OnPausedState?.Invoke();   break;
+            }
+        }
+
+        private void ApplyStateToTimeline(GameState s)
+        {
+            if (Timeline == null) return;
+            switch (s)
+            {
+                case GameState.Placing:
+                    if (TimeController != null) TimeController.ClearReverseScrub();
+                    Timeline.RewindAndClear();
+                    break;
+                case GameState.Playing:
+                    Timeline.SetCurrentTimeWithoutModeChange(0f);
+                    Timeline.Mode = TimelineMode.Recording;
+                    break;
+                case GameState.Paused:
+                case GameState.Resolved:
+                    Timeline.Mode = TimelineMode.Idle;
+                    break;
             }
         }
     }

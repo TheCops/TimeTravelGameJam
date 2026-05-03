@@ -175,6 +175,7 @@ MonoBehaviour:
   rewindImageOffsetY: 20
   rewindFps: 8
   fontColor: {r: 0.72955966, g: 0, b: 0, a: 1}
+  rewindBlinkPeriod: 0.6
 --- !u!1 &183591460
 GameObject:
   m_ObjectHideFlags: 0
@@ -535,12 +536,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbd5624eb4c4a4882b68ae35e2dea825, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.Game.MonkeyController
-  climbAmplitude: 1.5
-  climbSpeed: 0
-  waveAmplitudeDeg: 25
-  waveSpeed: 0
+  verticalSpeed: 4
+  minLocalY: -3
+  maxLocalY: 3
+  minAimDeg: -90
+  maxAimDeg: 90
+  startAimDeg: 45
+  aimRotateSpeedDegPerSec: 90
   throwDurationSec: 0.35
-  throwAngleDeg: 90
+  throwKickDeg: 45
 --- !u!4 &510164677
 Transform:
   m_ObjectHideFlags: 0
@@ -3039,7 +3043,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd29fe7e7dd6e4e9abecc1efdbd51e07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.Game.Launcher
-  launchAngleDegrees: 60
   launchSpeed: 3
   bananaPrefab: {fileID: 7911238922612688206, guid: 36adfcd836d88304db3aa79548c23496, type: 3}
   bananaScale: 0.12
@@ -3056,12 +3059,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbd5624eb4c4a4882b68ae35e2dea825, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.Game.MonkeyController
-  climbAmplitude: 1.5
-  climbSpeed: 0.6
-  waveAmplitudeDeg: 25
-  waveSpeed: 4
+  verticalSpeed: 4
+  minLocalY: -3
+  maxLocalY: 3
+  minAimDeg: -90
+  maxAimDeg: 90
+  startAimDeg: 45
+  aimRotateSpeedDegPerSec: 90
   throwDurationSec: 0.35
-  throwAngleDeg: 90
+  throwKickDeg: 45
 --- !u!1 &2072708739
 GameObject:
   m_ObjectHideFlags: 0

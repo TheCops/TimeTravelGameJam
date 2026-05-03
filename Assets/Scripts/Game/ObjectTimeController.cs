@@ -71,6 +71,12 @@ namespace TimeTravelBanana.Game
             {
                 timedRewindActive = false;
                 ResumeRecording();
+                return;
+            }
+
+            if (objectTime <= 0f)
+            {
+                ResumeRecording();
             }
         }
     }

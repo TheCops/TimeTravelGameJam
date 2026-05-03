@@ -8,6 +8,8 @@ namespace TimeTravelBanana.Game
         [SerializeField] private GameObject bananaPrefab;
         [SerializeField] private float bananaScale = 0.5f;
         [SerializeField] private MonkeyController monkey;
+        [SerializeField, Tooltip("Seconds to wait after entering Playing state before launching the banana.")]
+        private float launchDelay = 1f;
 
         public void SetLaunchSpeed(float speed) => launchSpeed = speed;
 
@@ -33,6 +35,13 @@ namespace TimeTravelBanana.Game
 
         private void HandlePlayingState()
         {
+            StartCoroutine(LaunchAfterDelay());
+        }
+
+        private System.Collections.IEnumerator LaunchAfterDelay()
+        {
+            if (launchDelay > 0f)
+                yield return new WaitForSeconds(launchDelay);
             SpawnAndLaunchInstance(autoDestroyOnResolve: true);
         }
 

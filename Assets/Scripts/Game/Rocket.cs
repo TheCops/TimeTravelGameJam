@@ -20,6 +20,7 @@ namespace TimeTravelBanana.Game
             rb = GetComponent<Rigidbody2D>();
             rb.useFullKinematicContacts = true;
             destructible = GetComponent<TimelineDestructible>();
+            if (GetComponent<Contraption>() == null) gameObject.AddComponent<Contraption>();
         }
 
         private void Start()

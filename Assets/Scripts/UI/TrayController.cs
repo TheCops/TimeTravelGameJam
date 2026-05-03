@@ -137,7 +137,9 @@ namespace TimeTravelBanana.UI
             rt.pivot = new Vector2(0f, 0.5f);
             rt.sizeDelta = new Vector2(panelWidth, 0f);
             rt.anchoredPosition = Vector2.zero;
-            go.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.5f);
+            var panelImage = go.GetComponent<Image>();
+            panelImage.color = new Color(0f, 0f, 0f, 0.5f);
+            panelImage.raycastTarget = false;
             rt.SetAsFirstSibling();
             return rt;
         }

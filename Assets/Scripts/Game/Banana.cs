@@ -1,7 +1,19 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TimeTravelBanana.Game
 {
+    public struct BananaScoreInfo
+    {
+        public int Points;
+        public int Base;
+        public int Hits;
+        public string Label;
+        public Vector3 WorldPos;
+        public bool IsLoss;
+        public bool IsEaten;
+    }
+
     [RequireComponent(typeof(Rigidbody2D))]
     public class Banana : MonoBehaviour, IDestructible
     {
@@ -17,17 +29,19 @@ namespace TimeTravelBanana.Game
         private SpriteRenderer sr;
         private float launchTime;
         private bool launched;
+        private readonly HashSet<int> hitContraptionIds = new HashSet<int>();
 
         private static readonly Color ColorGreen  = new Color(0.30f, 0.95f, 0.05f);
         private static readonly Color ColorRipe   = new Color(1.00f, 0.90f, 0.10f);
         private static readonly Color ColorBrown  = new Color(0.45f, 0.27f, 0.10f);
         private static readonly Color ColorRotten = new Color(0.00f, 0.00f, 0.00f);
 
-        public static event System.Action<int, Vector3> OnAnyBananaScored;
+        public static event System.Action<BananaScoreInfo> OnAnyBananaResolved;
 
         public bool Launched => launched;
         public bool Resolved { get; private set; }
         public bool IsCooked { get; private set; }
+        public int HitCount => hitContraptionIds.Count;
         public bool AutoDestroyOnResolve { get => autoDestroyOnResolve; set => autoDestroyOnResolve = value; }
 
         public void Cook()
@@ -51,15 +65,30 @@ namespace TimeTravelBanana.Game
             }
         }
 
-        public int ScoreValue
+        private static readonly string[] CookedLabels = { "Maduros!", "Extra Yum!" };
+
+        public int BaseScore
         {
             get
             {
-                if (IsCooked) return 5;
                 float t = NormalizedAge;
                 if (t >= rottenStartT) return 1;
+                if (IsCooked) return 5;
                 if (t >= ripeStartT && t < ripeEndT) return 3;
                 return 2;
+            }
+        }
+
+        public string RipenessLabel
+        {
+            get
+            {
+                float t = NormalizedAge;
+                if (t >= rottenStartT) return "Rotten";
+                if (IsCooked) return CookedLabels[Random.Range(0, CookedLabels.Length)];
+                if (t >= ripeStartT && t < ripeEndT) return "Ripe!!";
+                if (t < ripeStartT) return "Green";
+                return "Brown";
             }
         }
 
@@ -99,6 +128,26 @@ namespace TimeTravelBanana.Game
             launchTime = Time.time;
             launched = true;
             Resolved = false;
+            hitContraptionIds.Clear();
+        }
+
+        private static readonly string[] EatenLabels = { "NOM NOM!", "NOMNOM!", "Yummy!", "Tasty!", "Burp!", "Mine!" };
+
+        public void Eat()
+        {
+            if (Resolved) return;
+            Resolved = true;
+            OnAnyBananaResolved?.Invoke(new BananaScoreInfo
+            {
+                Points = -3,
+                Base = -3,
+                Hits = HitCount,
+                Label = EatenLabels[Random.Range(0, EatenLabels.Length)],
+                WorldPos = transform.position,
+                IsLoss = false,
+                IsEaten = true,
+            });
+            if (autoDestroyOnResolve) Destroy(gameObject);
         }
 
         public void DestroyByImpact()
@@ -111,12 +160,39 @@ namespace TimeTravelBanana.Game
         public void HitBucket()
         {
             if (Resolved) return;
-            int points = ScoreValue;
-            Vector3 pos = transform.position;
+            int basePts = BaseScore;
+            int hits = HitCount;
+            int total = basePts * (1 + hits);
             Resolved = true;
             OnWin?.Invoke();
-            OnAnyBananaScored?.Invoke(points, pos);
+            OnAnyBananaResolved?.Invoke(new BananaScoreInfo
+            {
+                Points = total,
+                Base = basePts,
+                Hits = hits,
+                Label = RipenessLabel,
+                WorldPos = transform.position,
+                IsLoss = false,
+            });
             if (autoDestroyOnResolve) Destroy(gameObject);
+        }
+
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            RegisterContraption(collision.collider);
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            RegisterContraption(other);
+        }
+
+        private void RegisterContraption(Collider2D col)
+        {
+            if (col == null) return;
+            var contraption = col.GetComponentInParent<Contraption>();
+            if (contraption == null) return;
+            hitContraptionIds.Add(contraption.GetInstanceID());
         }
 
         private void Update()
@@ -140,7 +216,15 @@ namespace TimeTravelBanana.Game
             {
                 Resolved = true;
                 OnLose?.Invoke();
-                OnAnyBananaScored?.Invoke(-1, p);
+                OnAnyBananaResolved?.Invoke(new BananaScoreInfo
+                {
+                    Points = -1,
+                    Base = -1,
+                    Hits = HitCount,
+                    Label = RipenessLabel,
+                    WorldPos = p,
+                    IsLoss = true,
+                });
                 if (autoDestroyOnResolve) Destroy(gameObject);
             }
         }

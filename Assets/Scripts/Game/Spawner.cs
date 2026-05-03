@@ -8,14 +8,13 @@ namespace TimeTravelBanana.Game
         {
             var go = new GameObject("Trampoline");
             go.transform.position = pos;
-            go.transform.localScale = new Vector3(2.4f, 0.4f, 1f);
+            go.transform.localScale = new Vector3(0.25f, 0.25f, 1f);
 
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.WhiteSquare;
-            sr.color = new Color(0.3f, 0.7f, 1f);
+            sr.sprite = Resources.Load<Sprite>("Art/trampoline");
             sr.sortingOrder = 2;
 
-            var col = go.AddComponent<BoxCollider2D>();
+            var col = go.AddComponent<PolygonCollider2D>();
             col.sharedMaterial = new PhysicsMaterial2D("Bouncy") { bounciness = 0.95f, friction = 0.1f };
 
             var rb = go.AddComponent<Rigidbody2D>();

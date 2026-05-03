@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace TimeTravelBanana.Game
@@ -5,6 +6,7 @@ namespace TimeTravelBanana.Game
     public class windmill : MonoBehaviour
     {
         [SerializeField] private float rotationTorque = 20f;
+        [SerializeField] private float maxSpeed = 20f;
         [SerializeField] private bool clockwise = true;
         bool rotating;
 
@@ -20,6 +22,18 @@ namespace TimeTravelBanana.Game
             destructible = GetComponent<TimelineDestructible>();
             if (GetComponent<Contraption>() == null) gameObject.AddComponent<Contraption>();
         }
+
+        private void Start()
+        {
+            placedPosition = transform.position;
+            placedRotation = transform.rotation;
+
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            gm.OnPlacingState += HandlePlacing;
+            gm.OnPlayingState += HandlePlaying;
+        }
+
         private void OnDestroy()
         {
             var gm = GameManager.Instance;
@@ -48,7 +62,11 @@ namespace TimeTravelBanana.Game
             if (!rotating) return;
             var gm = GameManager.Instance;
             if (gm == null || gm.State != GameState.Playing) return;
-            float torqueForce = rotationTorque;
+            float currentSpeedDif = maxSpeed -math.abs(rb.angularVelocity ) ;
+            if(currentSpeedDif < 0)
+                return;
+
+            float torqueForce = rotationTorque * (1-(math.abs(rb.angularVelocity ) / maxSpeed));
             if(!clockwise )
                 torqueForce *= -1;
             rb.AddTorque(torqueForce);

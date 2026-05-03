@@ -107,7 +107,8 @@ namespace TimeTravelBanana.UI
         {
             if (popupLayer == null) EnsurePopupLayer();
             if (popupLayer == null || canvas == null || canvasRect == null) return;
-            var cam = Camera.main;
+            var gm = GameManager.Instance;
+            var cam = gm != null && gm.SceneCamera != null ? gm.SceneCamera : Camera.main;
             if (cam == null) return;
 
             Vector3 anchorWorld = info.WorldPos + new Vector3(0f, worldYOffset, 0f);

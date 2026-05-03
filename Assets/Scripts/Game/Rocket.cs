@@ -5,10 +5,12 @@ namespace TimeTravelBanana.Game
     [RequireComponent(typeof(Rigidbody2D))]
     public class Rocket : MonoBehaviour
     {
-        [SerializeField] private float speed = 10f;
+        [SerializeField] private float thrust = 20f;
         [SerializeField] private float explosionScale = 1f;
+        [SerializeField] private Transform explosionLocation;
 
         private Rigidbody2D rb;
+        private TimelineDestructible destructible;
         private Vector3 placedPosition;
         private Quaternion placedRotation;
         private bool flying;
@@ -17,6 +19,8 @@ namespace TimeTravelBanana.Game
         {
             rb = GetComponent<Rigidbody2D>();
             rb.useFullKinematicContacts = true;
+            destructible = GetComponent<TimelineDestructible>();
+            if (GetComponent<Contraption>() == null) gameObject.AddComponent<Contraption>();
         }
 
         private void Start()
@@ -42,7 +46,6 @@ namespace TimeTravelBanana.Game
         {
             placedPosition = transform.position;
             placedRotation = transform.rotation;
-            rb.linearVelocity = (Vector2)(transform.up * speed);
             flying = true;
         }
 
@@ -55,12 +58,27 @@ namespace TimeTravelBanana.Game
             transform.rotation = placedRotation;
         }
 
+        private void FixedUpdate()
+        {
+            if (!flying) return;
+            var gm = GameManager.Instance;
+            if (gm == null || gm.State != GameState.Playing) return;
+            rb.AddForce((Vector2)(transform.up * thrust), ForceMode2D.Force);
+        }
+
         private void OnCollisionEnter2D(Collision2D collision)
         {
             if (!flying) return;
             flying = false;
-            Explosion.Spawn(transform.position, explosionScale);
-            Destroy(gameObject);
+            Explosion.Spawn(explosionLocation.position, transform.localScale.x * explosionScale);
+            
+            var target = collision.collider.GetComponentInParent<IDestructible>();
+            if (target != null && (Object)target != this && (Object)target != destructible)
+            {
+                target.DestroyByImpact();
+            }
+
+            if (destructible != null) destructible.DestroyByImpact();
         }
     }
 }

@@ -31,6 +31,17 @@ namespace TimeTravelBanana.Timeline
             }
         }
 
+        public void Configure(int tickRate, int maxBufferSeconds)
+        {
+            this.tickRate = Mathf.Max(1, tickRate);
+            this.maxBufferSeconds = Mathf.Max(1, maxBufferSeconds);
+        }
+
+        public void SetCurrentTimeWithoutModeChange(float t)
+        {
+            currentTime = Mathf.Clamp(t, 0f, Mathf.Max(timelineLength, t));
+        }
+
         public TimelineMode Mode
         {
             get => currentTimelineMode;
@@ -80,6 +91,14 @@ namespace TimeTravelBanana.Timeline
                 timeObjects[i].TruncateFuture(-1f);
         }
 
+        public void RewindAndClear()
+        {
+            currentTime = 0f;
+            for (int i = 0; i < timeObjects.Count; i++)
+                timeObjects[i].RestoreState(0f);
+            ResetTimeline();
+        }
+
         public void BakeFor(float seconds)
         {
             var oldSimMode = Physics2D.simulationMode;
@@ -121,11 +140,7 @@ namespace TimeTravelBanana.Timeline
                 for (int i = 0; i < timeObjects.Count; i++)
                     timeObjects[i].CaptureState(currentTime);
             }
-        }
-
-        private void LateUpdate()
-        {
-            if (currentTimelineMode == TimelineMode.Scrubbing) {
+            else if (currentTimelineMode == TimelineMode.Scrubbing) {
                 for (int i = 0; i < timeObjects.Count; i++)
                     timeObjects[i].RestoreState(currentTime);
             }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using TimeTravelBanana.Game;
 
 namespace TimeTravelBanana.Timeline
 {
@@ -7,6 +8,13 @@ namespace TimeTravelBanana.Timeline
     {
         [SerializeField] private TimelineManager timeline;
         [SerializeField, Min(0f)] private float destroyGracePeriod = 1f;
+
+        private void EnsureTimeline()
+        {
+            if (timeline != null) return;
+            var gm = GameManager.Instance;
+            if (gm != null) timeline = gm.Timeline;
+        }
 
         private struct Tracked
         {
@@ -20,6 +28,7 @@ namespace TimeTravelBanana.Timeline
 
         public GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
         {
+            EnsureTimeline();
             if (timeline == null || prefab == null) return null;
 
             GameObject instance = Instantiate(prefab, position, rotation);
@@ -37,6 +46,7 @@ namespace TimeTravelBanana.Timeline
 
         public void Despawn(GameObject instance)
         {
+            EnsureTimeline();
             if (instance == null || timeline == null) return;
             float now = timeline.CurrentTime;
 
@@ -49,6 +59,7 @@ namespace TimeTravelBanana.Timeline
 
         private void Update()
         {
+            EnsureTimeline();
             if (timeline == null || pendingDestroys.Count == 0) return;
             float threshold = timeline.CurrentTime - timeline.MaxBufferSeconds - destroyGracePeriod;
 

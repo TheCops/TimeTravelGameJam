@@ -9,6 +9,9 @@ namespace TimeTravelBanana.Game
     {
         [SerializeField] private float launchAngleDegrees = 60f;
         [SerializeField] private float launchSpeed = 12f;
+        
+        [SerializeField] private GameObject bananaPrefab;
+        [SerializeField] private float bananaScale = 0.5f;
         [SerializeField] private MonkeyController monkey;
 
         [Header("Fire Input")]
@@ -28,6 +31,22 @@ namespace TimeTravelBanana.Game
 
         public void SetLaunchAngle(float degrees) => launchAngleDegrees = degrees;
         public void SetLaunchSpeed(float speed) => launchSpeed = speed;
+        private void Start()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null)
+            {
+                Debug.LogWarning("Launcher: no GameManager.Instance found at Start; cannot register.");
+                return;
+            }
+            gm.RegisterLauncher(this);
+        }
+        private void OnDestroy()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            gm.UnregisterLauncher(this);
+        }
 
         public Banana SpawnAndLaunchInstance(bool autoDestroyOnResolve)
         {
@@ -46,11 +65,13 @@ namespace TimeTravelBanana.Game
                 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             }
 
-            var b = BananaFactory.Create(spawnPos);
-            b.AutoDestroyOnResolve = autoDestroyOnResolve;
-            b.Launch(spawnPos, dir * launchSpeed);
+            GameObject banana = Instantiate(bananaPrefab);
+            banana.transform.localScale = new Vector3(bananaScale, bananaScale, bananaScale);
+            Banana bscript = banana.GetComponent<Banana>();
+            bscript.AutoDestroyOnResolve = autoDestroyOnResolve;
+            bscript.Launch(spawnPos, dir * launchSpeed);
             if (monkey != null) monkey.PlayThrow();
-            return b;
+            return bscript;
         }
 
         private void Update()

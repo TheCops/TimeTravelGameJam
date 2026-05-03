@@ -58,6 +58,7 @@ namespace TimeTravelBanana.Game
         private void OnCollisionEnter2D(Collision2D collision)
         {
             if (!flying) return;
+            flying = false;
             Explosion.Spawn(transform.position, explosionScale);
             Destroy(gameObject);
         }

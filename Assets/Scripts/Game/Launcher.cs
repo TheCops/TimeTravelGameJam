@@ -6,17 +6,22 @@ namespace TimeTravelBanana.Game
     {
         [SerializeField] private float launchAngleDegrees = 60f;
         [SerializeField] private float launchSpeed = 12f;
+        [SerializeField] private MonkeyController monkey;
 
         public void SetLaunchAngle(float degrees) => launchAngleDegrees = degrees;
         public void SetLaunchSpeed(float speed) => launchSpeed = speed;
 
         public Banana SpawnAndLaunchInstance(bool autoDestroyOnResolve)
         {
-            var b = BananaFactory.Create(transform.position);
+            Vector2 spawnPos = (monkey != null && monkey.Hand != null)
+                ? (Vector2)monkey.Hand.position
+                : (Vector2)transform.position;
+            var b = BananaFactory.Create(spawnPos);
             b.AutoDestroyOnResolve = autoDestroyOnResolve;
             float rad = launchAngleDegrees * Mathf.Deg2Rad;
             Vector2 velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * launchSpeed;
-            b.Launch(transform.position, velocity);
+            b.Launch(spawnPos, velocity);
+            if (monkey != null) monkey.PlayThrow();
             return b;
         }
 

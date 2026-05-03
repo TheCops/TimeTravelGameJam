@@ -122,6 +122,85 @@ namespace TimeTravelBanana.EditorTools
             CreateLevel1Scene();
         }
 
+        [MenuItem("TimeTravelBanana/Tools/Add Monkey + Tree To Current Scene")]
+        public static void AddMonkeyAndTree()
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            if (!scene.IsValid())
+            {
+                Debug.LogWarning("AddMonkeyAndTree: no active scene.");
+                return;
+            }
+
+            if (FindRoot("MonkeyTree") != null)
+            {
+                Debug.Log("MonkeyTree already exists in " + scene.name + " — leaving it alone.");
+                return;
+            }
+
+            var treeSprite   = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Art/tree.png");
+            var monkeySprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Art/monkey.png");
+            var armSprite    = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Art/monkey_arm.png");
+            if (treeSprite == null || monkeySprite == null || armSprite == null)
+            {
+                Debug.LogError("AddMonkeyAndTree: one or more sprites missing or not imported as Sprite. Need tree.png, monkey.png, monkey_arm.png in Assets/Resources/Art/ with Texture Type = Sprite (2D and UI).");
+                return;
+            }
+
+            var root = new GameObject("MonkeyTree");
+            root.transform.position = new Vector3(-9f, -2f, 0f);
+            var ctrl = root.AddComponent<MonkeyController>();
+
+            var tree = new GameObject("Tree", typeof(SpriteRenderer));
+            tree.transform.SetParent(root.transform, false);
+            tree.transform.localPosition = Vector3.zero;
+            var treeSr = tree.GetComponent<SpriteRenderer>();
+            treeSr.sprite = treeSprite;
+            treeSr.sortingOrder = -50;
+
+            var monkey = new GameObject("Monkey", typeof(SpriteRenderer));
+            monkey.transform.SetParent(root.transform, false);
+            monkey.transform.localPosition = new Vector3(0f, 1.5f, 0f);
+            var monkeySr = monkey.GetComponent<SpriteRenderer>();
+            monkeySr.sprite = monkeySprite;
+            monkeySr.sortingOrder = -40;
+
+            var arm = new GameObject("Arm");
+            arm.transform.SetParent(monkey.transform, false);
+            arm.transform.localPosition = new Vector3(0.4f, 0.2f, 0f);
+
+            var armSpriteGo = new GameObject("ArmSprite", typeof(SpriteRenderer));
+            armSpriteGo.transform.SetParent(arm.transform, false);
+            armSpriteGo.transform.localPosition = new Vector3(0f, -0.5f, 0f);
+            var armSr = armSpriteGo.GetComponent<SpriteRenderer>();
+            armSr.sprite = armSprite;
+            armSr.sortingOrder = -39;
+
+            var hand = new GameObject("Hand");
+            hand.transform.SetParent(arm.transform, false);
+            hand.transform.localPosition = new Vector3(0f, 1.0f, 0f);
+
+            var launcherGo = FindRoot("Launcher");
+            if (launcherGo != null)
+            {
+                var launcher = launcherGo.GetComponent<Launcher>();
+                if (launcher != null)
+                {
+                    var lso = new SerializedObject(launcher);
+                    var monkeyProp = lso.FindProperty("monkey");
+                    if (monkeyProp != null)
+                    {
+                        monkeyProp.objectReferenceValue = ctrl;
+                        lso.ApplyModifiedPropertiesWithoutUndo();
+                    }
+                }
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            Selection.activeGameObject = root;
+            Debug.Log("Added MonkeyTree to " + scene.name + ". Adjust positions of Tree/Monkey/Arm/Hand children in the Hierarchy.");
+        }
+
         [MenuItem("TimeTravelBanana/Tools/Add Background To Current Scene")]
         public static void AddBackgroundToCurrentScene()
         {

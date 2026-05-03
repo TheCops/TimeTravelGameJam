@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 582990028341438265}
   - component: {fileID: 7100300000000000001}
   m_Layer: 0
-  m_Name: TimeReverser
+  m_Name: TimeRestorer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -74,7 +74,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 4.86, y: 6.59}
+    oldSize: {x: 1.22, y: 1.14}
     newSize: {x: 1.22, y: 1.14}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -94,7 +94,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d1625f1b59dfd24d88e21633cf41505, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.Game.InSceneTimeObject
-  timeFlowDirection: 0
+  timeFlowDirection: 1
   reverseSpeed: -1
 --- !u!212 &6283539682272166977
 SpriteRenderer:
@@ -145,7 +145,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7040346865362410759, guid: 48b7af4fd14114ad1a8044c98e1975f7, type: 3}
+  m_Sprite: {fileID: 8884692867665073691, guid: 0db3b9819b965034e8c6a9423f0f0210, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

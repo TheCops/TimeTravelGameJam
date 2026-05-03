@@ -6,14 +6,17 @@ namespace TimeTravelBanana.Game
     public class Rocket : MonoBehaviour
     {
         [SerializeField] private float speed = 10f;
+        [SerializeField] private float explosionScale = 1f;
 
         private Rigidbody2D rb;
         private Vector3 placedPosition;
         private Quaternion placedRotation;
+        private bool flying;
 
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
+            rb.useFullKinematicContacts = true;
         }
 
         private void Start()
@@ -40,14 +43,23 @@ namespace TimeTravelBanana.Game
             placedPosition = transform.position;
             placedRotation = transform.rotation;
             rb.linearVelocity = (Vector2)(transform.up * speed);
+            flying = true;
         }
 
         private void HandlePlacing()
         {
+            flying = false;
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
             transform.position = placedPosition;
             transform.rotation = placedRotation;
+        }
+
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            if (!flying) return;
+            Explosion.Spawn(transform.position, explosionScale);
+            Destroy(gameObject);
         }
     }
 }

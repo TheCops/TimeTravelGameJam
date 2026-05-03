@@ -996,6 +996,9 @@ MonoBehaviour:
   - label: windmill
     stock: 2
     prefab: {fileID: 5822032036933277305, guid: a5d728e1f20b6db42871d7f90e08c6ba, type: 3}
+  - label: pan
+    stock: 2
+    prefab: {fileID: 7100300000000000001, guid: f5a3e8b2c1d04f628a91b3c5d7e9f1ab, type: 3}
   panelWidth: 150
   slotSize: 110
   slotSpacing: 16

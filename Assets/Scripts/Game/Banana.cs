@@ -30,13 +30,16 @@ namespace TimeTravelBanana.Game
         public bool IsCooked { get; private set; }
         public bool AutoDestroyOnResolve { get => autoDestroyOnResolve; set => autoDestroyOnResolve = value; }
 
-        private static readonly Color ColorCooked = new Color(0.55f, 0.32f, 0.12f);
-
         public void Cook()
         {
             if (IsCooked || Resolved) return;
             IsCooked = true;
-            if (sr != null) sr.color = ColorCooked;
+            if (sr != null)
+            {
+                var cooked = Resources.Load<Sprite>("Art/maduros");
+                if (cooked != null) sr.sprite = cooked;
+                sr.color = Color.white;
+            }
         }
 
         public float NormalizedAge

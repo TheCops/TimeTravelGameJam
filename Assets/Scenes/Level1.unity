@@ -146,7 +146,7 @@ Transform:
   m_GameObject: {fileID: 155885496}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.85, y: 0.7, z: 0}
+  m_LocalPosition: {x: 1.35, y: 0.7, z: 0}
   m_LocalScale: {x: 0.3, y: 1.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -503,12 +503,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbd5624eb4c4a4882b68ae35e2dea825, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.Game.MonkeyController
-  climbAmplitude: 1.5
-  climbSpeed: 0.6
-  waveAmplitudeDeg: 25
-  waveSpeed: 4
-  throwDurationSec: 0.35
-  throwAngleDeg: 90
 --- !u!4 &510164677
 Transform:
   m_ObjectHideFlags: 0
@@ -732,7 +726,7 @@ Transform:
   m_GameObject: {fileID: 656814599}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.85, y: 0.7, z: 0}
+  m_LocalPosition: {x: -1.35, y: 0.7, z: 0}
   m_LocalScale: {x: 0.3, y: 1.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1115,9 +1109,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac64bd2f7f6d9416ea5fe519dcfd007e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.UI.Playtester
-  spawnInterval: 1
-  maxActiveBananas: 10
-  maxBananasPerRound: 100
 --- !u!114 &734476998
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3235,7 +3226,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 0.3, z: 1}
+  m_LocalScale: {x: 3.0, y: 0.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1084646679}
@@ -3451,7 +3442,7 @@ Transform:
   m_GameObject: {fileID: 2084753749}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0}
+  m_LocalPosition: {x: 0, y: 0.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3515,7 +3506,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.4, y: 0.6}
+  m_Size: {x: 2.4, y: 0.6}
   m_EdgeRadius: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

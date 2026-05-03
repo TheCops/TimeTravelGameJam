@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TimeTravelBanana.Game;
@@ -7,17 +6,9 @@ namespace TimeTravelBanana.UI
 {
     public class Playtester : MonoBehaviour
     {
-        [SerializeField] private float spawnInterval = 1f;
-        [SerializeField] private int maxActiveBananas = 10;
-        [SerializeField] private int maxBananasPerRound = 100;
-
         private Button toggleButton;
         private Text toggleLabel;
-
-        private readonly Queue<Banana> active = new Queue<Banana>();
-        private float timer;
         private bool playing;
-        private int totalSpawned;
 
         private void Awake()
         {
@@ -63,71 +54,17 @@ namespace TimeTravelBanana.UI
             bool wasPlaying = playing;
             playing = false;
             if (toggleLabel != null) toggleLabel.text = "PLAY";
-            if (wasPlaying) StopPlaytest();
+            if (wasPlaying)
+            {
+                var launcher = GameManager.Instance != null ? GameManager.Instance.Launcher : null;
+                if (launcher != null) launcher.ClearActiveBananas();
+            }
         }
 
         private void HandlePlaying()
         {
-            bool wasPlaying = playing;
             playing = true;
             if (toggleLabel != null) toggleLabel.text = "STOP";
-            if (!wasPlaying) StartPlaytest();
-        }
-
-        private void StartPlaytest()
-        {
-            timer = 0f;
-            totalSpawned = 0;
-            SpawnOne();
-        }
-
-        private void StopPlaytest()
-        {
-            while (active.Count > 0)
-            {
-                var b = active.Dequeue();
-                if (b != null) Destroy(b.gameObject);
-            }
-        }
-
-        private void Update()
-        {
-            if (!playing) return;
-
-            if (totalSpawned < maxBananasPerRound)
-            {
-                timer += Time.deltaTime;
-                if (timer >= spawnInterval)
-                {
-                    timer -= spawnInterval;
-                    SpawnOne();
-                }
-            }
-
-            while (active.Count > 0 && active.Peek() == null) active.Dequeue();
-
-            if (totalSpawned >= maxBananasPerRound && active.Count == 0)
-            {
-                var gm = GameManager.Instance;
-                if (gm != null) gm.EnterPlanning();
-            }
-        }
-
-        private void SpawnOne()
-        {
-            var gm = GameManager.Instance;
-            var launcher = gm != null ? gm.Launcher : null;
-            if (launcher == null) return;
-            var b = launcher.SpawnAndLaunchInstance(autoDestroyOnResolve: true);
-            if (b != null) active.Enqueue(b);
-            totalSpawned++;
-
-            while (active.Count > 0 && active.Peek() == null) active.Dequeue();
-            while (active.Count > maxActiveBananas)
-            {
-                var oldest = active.Dequeue();
-                if (oldest != null) Destroy(oldest.gameObject);
-            }
         }
 
         private void BuildButton(Transform canvasTransform)

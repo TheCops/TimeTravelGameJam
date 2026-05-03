@@ -299,15 +299,15 @@ namespace TimeTravelBanana.EditorTools
             if (FindRoot(name) != null) return;
             var root = new GameObject(name);
             root.transform.position = pos;
-            CreateChildBox(root, "Bottom", new Vector3(0f,    0f,   0f), new Vector2(2.0f, 0.3f), Color.cyan);
-            CreateChildBox(root, "Left",   new Vector3(-0.85f, 0.7f, 0f), new Vector2(0.3f, 1.4f), Color.cyan);
-            CreateChildBox(root, "Right",  new Vector3(0.85f,  0.7f, 0f), new Vector2(0.3f, 1.4f), Color.cyan);
+            CreateChildBox(root, "Bottom", new Vector3(0f,    0f,   0f), new Vector2(3.6f, 0.3f), Color.cyan);
+            CreateChildBox(root, "Left",   new Vector3(-1.65f, 0.7f, 0f), new Vector2(0.3f, 1.4f), Color.cyan);
+            CreateChildBox(root, "Right",  new Vector3(1.65f,  0.7f, 0f), new Vector2(0.3f, 1.4f), Color.cyan);
 
             var trigger = new GameObject("Trigger");
             trigger.transform.SetParent(root.transform, false);
-            trigger.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            trigger.transform.localPosition = new Vector3(0f, 0.7f, 0f);
             var triggerCol = trigger.AddComponent<BoxCollider2D>();
-            triggerCol.size = new Vector2(1.4f, 0.6f);
+            triggerCol.size = new Vector2(3.0f, 0.6f);
             triggerCol.isTrigger = true;
             trigger.AddComponent<Bucket>();
         }

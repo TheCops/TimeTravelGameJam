@@ -8,19 +8,18 @@ namespace TimeTravelBanana.Game
         {
             var go = new GameObject("Banana");
             go.transform.position = pos;
-            go.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+            go.transform.localScale = new Vector3(0.25f, 0.25f, 1f);
 
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.WhiteCircle;
-            sr.color = new Color(1f, 0.85f, 0.1f);
+            sr.sprite = Resources.Load<Sprite>("Art/banana");
             sr.sortingOrder = 5;
 
-            var col = go.AddComponent<CircleCollider2D>();
-            col.radius = 0.5f;
+            go.AddComponent<PolygonCollider2D>();
 
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 1f;
             rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             return go.AddComponent<Banana>();
         }

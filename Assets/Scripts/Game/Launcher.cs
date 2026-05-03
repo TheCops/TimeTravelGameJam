@@ -8,7 +8,7 @@ namespace TimeTravelBanana.Game
     public class Launcher : MonoBehaviour
     {
         [SerializeField] private float launchAngleDegrees = 60f;
-        [SerializeField] private float launchSpeed = 12f;
+        [SerializeField] private float launchSpeed = 120f;
         
         [SerializeField] private GameObject bananaPrefab;
         [SerializeField] private float bananaScale = 0.5f;

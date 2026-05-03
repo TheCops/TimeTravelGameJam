@@ -81,10 +81,10 @@ namespace TimeTravelBanana.Timeline
 
         public void OnTimelineModeChanged(TimelineMode previous, TimelineMode next)
         {
-            bool wasFrozen = previous != TimelineMode.Recording;
-            bool isFrozen = next != TimelineMode.Recording;
-            if (!wasFrozen && isFrozen) OnEnterScrubbing();
-            else if (wasFrozen && !isFrozen) OnExitScrubbing();
+            if (previous != TimelineMode.Scrubbing && next == TimelineMode.Scrubbing)
+                OnEnterScrubbing();
+            else if (previous == TimelineMode.Scrubbing && next != TimelineMode.Scrubbing)
+                OnExitScrubbing();
         }
 
         protected virtual void OnConnected() { }

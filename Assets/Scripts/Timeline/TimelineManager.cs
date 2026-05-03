@@ -93,6 +93,10 @@ namespace TimeTravelBanana.Timeline
 
         public void RewindAndClear()
         {
+            // Drop out of Scrubbing first so the rewind takes the teleport path in
+            // ApplySnapshot rather than computing a huge implicit velocity for the
+            // snap back to t=0 (which would otherwise leak into the next state).
+            Mode = TimelineMode.Idle;
             currentTime = 0f;
             for (int i = 0; i < timeObjects.Count; i++)
                 timeObjects[i].RestoreState(0f);

@@ -15,6 +15,8 @@ namespace TimeTravelBanana.Timeline
 
         private Rigidbody2D rb;
         private RigidbodyType2D defaultBodyType;
+        private Vector2 lastRecordedLinearVelocity;
+        private float lastRecordedAngularVelocity;
 
         private void Awake()
         {
@@ -33,6 +35,9 @@ namespace TimeTravelBanana.Timeline
 
         protected override void ApplySnapshot(Snapshot snapshot)
         {
+            lastRecordedLinearVelocity = snapshot.LinearVelocity;
+            lastRecordedAngularVelocity = snapshot.AngularVelocity;
+
             if (timeline.Mode == TimelineMode.Scrubbing)
             {
                 float dt = Time.fixedDeltaTime;
@@ -74,7 +79,23 @@ namespace TimeTravelBanana.Timeline
         protected override void OnExitScrubbing()
         {
             if (!IsCurrentlyAlive) return;
-            rb.bodyType = defaultBodyType;
+            if (timeline != null && timeline.Mode == TimelineMode.Recording)
+            {
+                rb.bodyType = defaultBodyType;
+                if (rb.bodyType == RigidbodyType2D.Dynamic)
+                {
+                    rb.linearVelocity = lastRecordedLinearVelocity;
+                    rb.angularVelocity = lastRecordedAngularVelocity;
+                }
+            }
+            else
+            {
+                // Exiting Scrubbing into Idle (game left Playing). Hard-stop physics
+                // and let higher-level systems (PlanningDraggable, lifecycle) decide
+                // body type for the next state.
+                rb.linearVelocity = Vector2.zero;
+                rb.angularVelocity = 0f;
+            }
         }
 
         protected override void OnLifecycleChanged(bool isAlive)

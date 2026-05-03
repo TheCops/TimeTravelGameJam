@@ -27,7 +27,20 @@ namespace TimeTravelBanana.Game
 
         public bool Launched => launched;
         public bool Resolved { get; private set; }
+        public bool IsCooked { get; private set; }
         public bool AutoDestroyOnResolve { get => autoDestroyOnResolve; set => autoDestroyOnResolve = value; }
+
+        public void Cook()
+        {
+            if (IsCooked || Resolved) return;
+            IsCooked = true;
+            if (sr != null)
+            {
+                var cooked = Resources.Load<Sprite>("Art/maduros");
+                if (cooked != null) sr.sprite = cooked;
+                sr.color = Color.white;
+            }
+        }
 
         public float NormalizedAge
         {
@@ -86,7 +99,7 @@ namespace TimeTravelBanana.Game
             if (!launched || Resolved) return;
 
             float age = Time.time - launchTime;
-            if (sr != null)
+            if (sr != null && !IsCooked)
             {
                 float t = Mathf.Clamp01(age / maxFlightTime);
                 if (t < 0.5f)

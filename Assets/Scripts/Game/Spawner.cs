@@ -24,9 +24,9 @@ namespace TimeTravelBanana.Game
             return go.AddComponent<PlanningDraggable>();
         }
 
-        public static PlanningDraggable Block(Vector2 pos)
+        public static PlanningDraggable Pan(Vector2 pos)
         {
-            var go = new GameObject("Block");
+            var go = new GameObject("Pan");
             go.transform.position = pos;
             go.transform.localScale = new Vector3(0.25f, 0.25f, 1f);
 
@@ -35,12 +35,13 @@ namespace TimeTravelBanana.Game
             sr.sortingOrder = 2;
 
             var col = go.AddComponent<PolygonCollider2D>();
-            col.sharedMaterial = new PhysicsMaterial2D("Block") { bounciness = 0.05f, friction = 0.6f };
+            col.sharedMaterial = new PhysicsMaterial2D("Pan") { bounciness = 0.05f, friction = 0.6f };
 
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 1f;
             rb.bodyType = RigidbodyType2D.Kinematic;
 
+            go.AddComponent<Pan>();
             return go.AddComponent<PlanningDraggable>();
         }
 

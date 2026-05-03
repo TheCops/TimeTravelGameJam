@@ -21,6 +21,7 @@ namespace TimeTravelBanana.Game
         [SerializeField, Min(1)] private int maxBufferSeconds = 30;
 
         private readonly List<PlanningDraggable> draggables = new List<PlanningDraggable>();
+        private AudioSource musicSource;
 
         public GameState State { get; private set; } = GameState.Placing;
         public Launcher Launcher { get; private set; }
@@ -56,6 +57,17 @@ namespace TimeTravelBanana.Game
 
             ActivateHiddenCanvases();
             EnsureBackground();
+            SetupMusic();
+        }
+
+        private void SetupMusic()
+        {
+            var clip = Resources.Load<AudioClip>("Audio/banana_rift");
+            if (clip == null) return;
+            musicSource = gameObject.AddComponent<AudioSource>();
+            musicSource.clip = clip;
+            musicSource.loop = true;
+            musicSource.playOnAwake = false;
         }
 
         private static void EnsureBackground()
@@ -189,6 +201,14 @@ namespace TimeTravelBanana.Game
                 case GameState.Playing:  OnPlayingState?.Invoke();  break;
                 case GameState.Resolved: OnResolvedState?.Invoke(); break;
                 case GameState.Paused:   OnPausedState?.Invoke();   break;
+            }
+
+            if (musicSource != null)
+            {
+                if (s == GameState.Playing && !musicSource.isPlaying)
+                    musicSource.Play();
+                else if (s != GameState.Playing)
+                    musicSource.Stop();
             }
         }
 

@@ -8,6 +8,7 @@ namespace TimeTravelBanana.Game
         [SerializeField] private int sortingOrder = 10;
 
         private static Sprite[] cachedFrames;
+        private static AudioClip cachedSound;
 
         private SpriteRenderer sr;
         private float startTime;
@@ -37,6 +38,9 @@ namespace TimeTravelBanana.Game
         {
             startTime = Time.time;
             if (cachedFrames != null && cachedFrames.Length > 0) sr.sprite = cachedFrames[0];
+
+            if (cachedSound == null) cachedSound = Resources.Load<AudioClip>("Audio/explosion");
+            if (cachedSound != null) AudioSource.PlayClipAtPoint(cachedSound, transform.position);
         }
 
         private void Update()

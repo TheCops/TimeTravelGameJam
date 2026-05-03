@@ -542,13 +542,13 @@ MonoBehaviour:
     m_LineSpacing: 1
   m_Text: 'Drag objects from the tray to plan a path.
 
-    Press SPACE to launch
-    the banana.
+    Use W/S or UP/DOWN to move the monkey.
 
-    Land it in the fruit bowl before time runs out.
+    Aim with the mouse, click to throw (hold for rapid fire).
 
-    Special
-    blocks change time speed and direction.
+    Land bananas in the fruit bowl before time runs out.
+
+    Special blocks change time speed and direction.
 
     Press R to retry.'
 --- !u!222 &749960541

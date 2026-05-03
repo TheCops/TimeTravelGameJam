@@ -42,8 +42,9 @@ namespace TimeTravelBanana.EditorTools
             var panel = CreatePanel(canvasGo.transform, "InstructionsPanel");
             var panelText = CreateText(panel.transform, "Body",
                 "Drag objects from the tray to plan a path.\n" +
-                "Press SPACE to launch the banana.\n" +
-                "Land it in the fruit bowl before time runs out.\n" +
+                "Use W/S or UP/DOWN to move the monkey.\n" +
+                "Aim with the mouse, click to throw (hold for rapid fire).\n" +
+                "Land bananas in the fruit bowl before time runs out.\n" +
                 "Special blocks change time speed and direction.\n" +
                 "Press R to retry.",
                 36, Vector2.zero, new Vector2(1400, 600));

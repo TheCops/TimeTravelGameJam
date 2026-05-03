@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TimeTravelBanana.Timeline;
 
 namespace TimeTravelBanana.Game
 {
@@ -17,11 +18,19 @@ namespace TimeTravelBanana.Game
         public static GameManager Instance { get; private set; }
 
         [SerializeField] private Launcher launcher;
+        [SerializeField, Min(1)] private int tickRate = 50;
+        [SerializeField, Min(1)] private int maxBufferSeconds = 30;
+        [SerializeField] private float defaultRate = 1f;
+        [SerializeField] private float fastForwardRate = 2.5f;
+        [SerializeField] private float rewindRate = -2f;
 
         private readonly List<PlanningDraggable> draggables = new List<PlanningDraggable>();
 
         public GameState State { get; private set; } = GameState.Placing;
         public Launcher Launcher => launcher;
+        public Camera SceneCamera { get; private set; }
+        public TimelineManager Timeline { get; private set; }
+        public ObjectTimeController TimeController { get; private set; }
 
         public event System.Action OnPlacingState;
         public event System.Action OnPlayingState;
@@ -36,6 +45,24 @@ namespace TimeTravelBanana.Game
                 return;
             }
             Instance = this;
+
+            SceneCamera = Camera.main != null
+                ? Camera.main
+                : UnityEngine.Object.FindFirstObjectByType<Camera>();
+
+            var timelineGo = new GameObject("TimelineManager");
+            timelineGo.transform.SetParent(transform, false);
+            Timeline = timelineGo.AddComponent<TimelineManager>();
+            Timeline.Configure(tickRate, maxBufferSeconds);
+
+            var timeControllerGo = new GameObject("ObjectTimeController");
+            timeControllerGo.transform.SetParent(transform, false);
+            TimeController = timeControllerGo.AddComponent<ObjectTimeController>();
+            TimeController.SetTimeline(Timeline);
+            TimeController.SetRates(defaultRate, fastForwardRate, rewindRate);
+
+            ApplyStateToTimeline(State);
+
             ActivateHiddenCanvases();
         }
 
@@ -124,12 +151,32 @@ namespace TimeTravelBanana.Game
         {
             if (State == s) return;
             State = s;
+            ApplyStateToTimeline(s);
             switch (s)
             {
                 case GameState.Placing:  OnPlacingState?.Invoke();  break;
                 case GameState.Playing:  OnPlayingState?.Invoke();  break;
                 case GameState.Resolved: OnResolvedState?.Invoke(); break;
                 case GameState.Paused:   OnPausedState?.Invoke();   break;
+            }
+        }
+
+        private void ApplyStateToTimeline(GameState s)
+        {
+            if (Timeline == null) return;
+            switch (s)
+            {
+                case GameState.Placing:
+                    Timeline.ResetTimeline();
+                    break;
+                case GameState.Playing:
+                    Timeline.SetCurrentTimeWithoutModeChange(0f);
+                    Timeline.Mode = TimelineMode.Recording;
+                    break;
+                case GameState.Paused:
+                case GameState.Resolved:
+                    Timeline.Mode = TimelineMode.Idle;
+                    break;
             }
         }
     }

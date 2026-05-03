@@ -31,6 +31,17 @@ namespace TimeTravelBanana.Timeline
             }
         }
 
+        public void Configure(int tickRate, int maxBufferSeconds)
+        {
+            this.tickRate = Mathf.Max(1, tickRate);
+            this.maxBufferSeconds = Mathf.Max(1, maxBufferSeconds);
+        }
+
+        public void SetCurrentTimeWithoutModeChange(float t)
+        {
+            currentTime = Mathf.Clamp(t, 0f, Mathf.Max(timelineLength, t));
+        }
+
         public TimelineMode Mode
         {
             get => currentTimelineMode;

@@ -39,7 +39,6 @@ namespace TimeTravelBanana.UI
             if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
             if (canvas == null) { Debug.LogWarning("TrayController: no Canvas in scene; tray UI will not be built."); return; }
 
-            worldCamera = Camera.main;
             panel = BuildPanel(canvas.transform);
             entries.Add(new Entry { label = "Trampoline", stock = trampolineStock, iconColor = new Color(0.3f, 0.7f, 1f),  spawn = pos => Spawner.Trampoline(pos) });
             entries.Add(new Entry { label = "Block",      stock = blockStock,      iconColor = new Color(0.85f, 0.7f, 0.4f), spawn = pos => Spawner.Block(pos) });
@@ -114,7 +113,12 @@ namespace TimeTravelBanana.UI
 
         private Vector2 MouseWorld()
         {
-            var cam = worldCamera != null ? worldCamera : Camera.main;
+            if (worldCamera == null)
+            {
+                var gm = GameManager.Instance;
+                worldCamera = gm != null && gm.SceneCamera != null ? gm.SceneCamera : Camera.main;
+            }
+            var cam = worldCamera;
             if (cam == null) return Vector2.zero;
             var mouse = UnityEngine.InputSystem.Mouse.current;
             if (mouse == null) return cam.transform.position;

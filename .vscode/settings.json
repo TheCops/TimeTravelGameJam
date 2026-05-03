@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "TimeTravelGameJam.slnx"
+    "dotnet.defaultSolution": "Time Travel Banana.slnx"
 }

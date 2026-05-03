@@ -1,4 +1,5 @@
 using UnityEngine;
+using TimeTravelBanana.Game;
 
 namespace TimeTravelBanana.Timeline
 {
@@ -49,7 +50,8 @@ namespace TimeTravelBanana.Timeline
             timeline = tm;
             OnConnected();
             timeline.Register(this);
-            if (timeline.Mode != TimelineMode.Recording) OnEnterScrubbing();
+            if (timeline.Mode == TimelineMode.Recording) OnExitScrubbing();
+            else OnEnterScrubbing();
         }
 
         protected virtual void OnEnable()
@@ -58,6 +60,14 @@ namespace TimeTravelBanana.Timeline
             OnConnected();
             timeline.Register(this);
             if (timeline.Mode != TimelineMode.Recording) OnEnterScrubbing();
+        }
+
+        protected virtual void Start()
+        {
+            if (timeline != null) return;
+            var gm = GameManager.Instance;
+            if (gm == null || gm.Timeline == null) return;
+            ConnectToTimeline(gm.Timeline);
         }
 
         protected virtual void OnDisable()

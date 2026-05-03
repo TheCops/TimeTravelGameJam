@@ -22,6 +22,7 @@ namespace TimeTravelBanana.Timeline
         {
             rb = GetComponent<Rigidbody2D>();
             defaultBodyType = rb.bodyType;
+            rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
         protected override Snapshot CaptureSnapshot() => new Snapshot

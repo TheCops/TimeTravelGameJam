@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 745589279720528351}
   - component: {fileID: 6283539682272166977}
   - component: {fileID: 582990028341438265}
+  - component: {fileID: 7100300000000000001}
   m_Layer: 0
   m_Name: TimeReverser
   m_TagString: Untagged
@@ -169,3 +170,16 @@ MonoBehaviour:
   dragCamera: {fileID: 0}
   snapSize: 0.5
   rotationStep: 15
+--- !u!114 &7100300000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4910567590156524461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8c4f0d5e6f73129405b6c7d8e9fa012, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.Game.TimelineDestructible
+  timeline: {fileID: 0}

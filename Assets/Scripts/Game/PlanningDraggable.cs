@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 
 namespace TimeTravelBanana.Game
 {
-    [RequireComponent(typeof(Collider2D))]
     public class PlanningDraggable : MonoBehaviour
     {
         [SerializeField] private Camera dragCamera;

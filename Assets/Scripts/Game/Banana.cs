@@ -3,7 +3,7 @@ using UnityEngine;
 namespace TimeTravelBanana.Game
 {
     [RequireComponent(typeof(Rigidbody2D))]
-    public class Banana : MonoBehaviour
+    public class Banana : MonoBehaviour, IDestructible
     {
         [SerializeField] private float maxFlightTime = 8f;
         [SerializeField] private float offscreenY = -20f;
@@ -98,6 +98,13 @@ namespace TimeTravelBanana.Game
             launchTime = Time.time;
             launched = true;
             Resolved = false;
+        }
+
+        public void DestroyByImpact()
+        {
+            if (Resolved) return;
+            Resolved = true;
+            Destroy(gameObject);
         }
 
         public void HitBucket()

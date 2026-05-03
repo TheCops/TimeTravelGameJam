@@ -17,7 +17,7 @@ namespace TimeTravelBanana.UI
         }
 
         [SerializeField] private int trampolineStock = 3;
-        [SerializeField] private int blockStock = 3;
+        [SerializeField] private int panStock = 3;
         [SerializeField] private int rocketStock = 3;
         [SerializeField] private float panelWidth = 150f;
         [SerializeField] private float slotSize = 110f;
@@ -42,7 +42,7 @@ namespace TimeTravelBanana.UI
             worldCamera = Camera.main;
             panel = BuildPanel(canvas.transform);
             entries.Add(new Entry { label = "Trampoline", stock = trampolineStock, iconColor = new Color(0.3f, 0.7f, 1f),  spawn = pos => Spawner.Trampoline(pos) });
-            entries.Add(new Entry { label = "Block",      stock = blockStock,      iconColor = new Color(0.85f, 0.7f, 0.4f), spawn = pos => Spawner.Block(pos) });
+            entries.Add(new Entry { label = "Pan",        stock = panStock,        iconColor = new Color(0.85f, 0.7f, 0.4f), spawn = pos => Spawner.Pan(pos) });
             entries.Add(new Entry { label = "Rocket",     stock = rocketStock,     iconColor = new Color(0.95f, 0.45f, 0.35f), spawn = pos => Spawner.Rocket(pos) });
             for (int i = 0; i < entries.Count; i++) stocks.Add(entries[i].stock);
             BuildSlots();

@@ -987,7 +987,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.UI.TrayController
   trampolineStock: 3
-  blockStock: 3
+  panStock: 3
   panelWidth: 150
   slotSize: 110
   slotSpacing: 16

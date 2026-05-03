@@ -13,6 +13,7 @@ namespace TimeTravelBanana.UI
             public string label;
             public int stock;
             public Color iconColor = Color.white;
+            public Sprite iconSprite;
             public Func<Vector2, PlanningDraggable> spawn;
         }
 
@@ -41,9 +42,9 @@ namespace TimeTravelBanana.UI
 
             worldCamera = Camera.main;
             panel = BuildPanel(canvas.transform);
-            entries.Add(new Entry { label = "Trampoline", stock = trampolineStock, iconColor = new Color(0.3f, 0.7f, 1f),  spawn = pos => Spawner.Trampoline(pos) });
-            entries.Add(new Entry { label = "Pan",        stock = panStock,        iconColor = new Color(0.85f, 0.7f, 0.4f), spawn = pos => Spawner.Pan(pos) });
-            entries.Add(new Entry { label = "Rocket",     stock = rocketStock,     iconColor = new Color(0.95f, 0.45f, 0.35f), spawn = pos => Spawner.Rocket(pos) });
+            entries.Add(new Entry { label = "Trampoline", stock = trampolineStock, iconColor = new Color(0.3f, 0.7f, 1f),    iconSprite = Resources.Load<Sprite>("Art/trampoline"), spawn = pos => Spawner.Trampoline(pos) });
+            entries.Add(new Entry { label = "Pan",        stock = panStock,        iconColor = new Color(0.85f, 0.7f, 0.4f), iconSprite = Resources.Load<Sprite>("Art/pan"),        spawn = pos => Spawner.Pan(pos) });
+            entries.Add(new Entry { label = "Rocket",     stock = rocketStock,     iconColor = new Color(0.95f, 0.45f, 0.35f), iconSprite = Resources.Load<Sprite>("Art/rocket"),     spawn = pos => Spawner.Rocket(pos) });
             for (int i = 0; i < entries.Count; i++) stocks.Add(entries[i].stock);
             BuildSlots();
         }
@@ -169,8 +170,10 @@ namespace TimeTravelBanana.UI
             iconRt.sizeDelta = new Vector2(slotSize * 0.6f, slotSize * 0.6f);
             iconRt.anchoredPosition = new Vector2(0f, 8f);
             var icon = iconGo.GetComponent<Image>();
-            icon.sprite = SpriteFactory.WhiteSquare;
-            icon.color = entry.iconColor;
+            bool hasArt = entry.iconSprite != null;
+            icon.sprite = hasArt ? entry.iconSprite : SpriteFactory.WhiteSquare;
+            icon.color = hasArt ? Color.white : entry.iconColor;
+            icon.preserveAspect = true;
 
             var countGo = new GameObject("Count", typeof(RectTransform), typeof(Text));
             var countRt = (RectTransform)countGo.transform;
@@ -189,7 +192,7 @@ namespace TimeTravelBanana.UI
             var slot = go.GetComponent<TraySlot>();
             var group = go.GetComponent<CanvasGroup>();
             slot.Bind(icon, count, group);
-            slot.Init(this, index, entry.iconColor, entry.label, SpriteFactory.WhiteSquare);
+            slot.Init(this, index, hasArt ? Color.white : entry.iconColor, entry.label, hasArt ? entry.iconSprite : SpriteFactory.WhiteSquare);
             return slot;
         }
     }

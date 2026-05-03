@@ -58,9 +58,10 @@ namespace TimeTravelBanana.Game
             col.sharedMaterial = new PhysicsMaterial2D("Rocket") { bounciness = 0.05f, friction = 0.6f };
 
             var rb = go.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 1f;
+            rb.gravityScale = 0f;
             rb.bodyType = RigidbodyType2D.Kinematic;
 
+            go.AddComponent<Rocket>();
             return go.AddComponent<PlanningDraggable>();
         }
     }

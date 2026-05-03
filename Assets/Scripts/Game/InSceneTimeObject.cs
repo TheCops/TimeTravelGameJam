@@ -9,7 +9,6 @@ namespace TimeTravelBanana.Game
         Switch,
     }
 
-    [RequireComponent(typeof(Collider2D))]
     [RequireComponent(typeof(AudioSource))]
     public class InSceneTimeObject : MonoBehaviour
     {

@@ -990,6 +990,12 @@ MonoBehaviour:
   - label: trampoline
     stock: 2
     prefab: {fileID: 5822032036933277305, guid: dc68582661ce9534bae84d8ce778cf6b, type: 3}
+  - label: time restorer
+    stock: 2
+    prefab: {fileID: 4910567590156524461, guid: a2744b5210341e045a7fbd4abaa61c91, type: 3}
+  - label: windmill
+    stock: 2
+    prefab: {fileID: 5822032036933277305, guid: a5d728e1f20b6db42871d7f90e08c6ba, type: 3}
   panelWidth: 150
   slotSize: 110
   slotSpacing: 16

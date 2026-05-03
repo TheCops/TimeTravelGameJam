@@ -169,6 +169,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.UI.TimeDirectionDisplay
   fontSize: 36
   bottomOffset: 30
+  rewindImageSize: {x: 8000, y: 1000}
+  rewindImageOffsetY: 20
+  rewindFps: 8
 --- !u!1 &183591460
 GameObject:
   m_ObjectHideFlags: 0

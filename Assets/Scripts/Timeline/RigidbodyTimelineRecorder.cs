@@ -79,23 +79,31 @@ namespace TimeTravelBanana.Timeline
         protected override void OnExitScrubbing()
         {
             if (!IsCurrentlyAlive) return;
-            if (timeline != null && timeline.Mode == TimelineMode.Recording)
+            if (timeline == null || timeline.Mode != TimelineMode.Recording)
             {
-                rb.bodyType = defaultBodyType;
-                if (rb.bodyType == RigidbodyType2D.Dynamic)
-                {
-                    rb.linearVelocity = lastRecordedLinearVelocity;
-                    rb.angularVelocity = lastRecordedAngularVelocity;
-                }
-            }
-            else
-            {
-                // Exiting Scrubbing into Idle (game left Playing). Hard-stop physics
-                // and let higher-level systems (PlanningDraggable, lifecycle) decide
-                // body type for the next state.
+                // Scrubbing -> Idle. OnExitRecording handles the Recording exit path;
+                // here we just hard-stop physics so nothing carries over into Placing.
                 rb.linearVelocity = Vector2.zero;
                 rb.angularVelocity = 0f;
             }
+        }
+
+        protected override void OnEnterRecording()
+        {
+            if (!IsCurrentlyAlive) return;
+            rb.bodyType = defaultBodyType;
+            if (rb.bodyType == RigidbodyType2D.Dynamic)
+            {
+                rb.linearVelocity = lastRecordedLinearVelocity;
+                rb.angularVelocity = lastRecordedAngularVelocity;
+            }
+        }
+
+        protected override void OnExitRecording()
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
         }
 
         protected override void OnLifecycleChanged(bool isAlive)

@@ -55,6 +55,7 @@ namespace TimeTravelBanana.Game
         {
             get
             {
+                if (IsCooked) return 5;
                 float t = NormalizedAge;
                 if (t >= rottenStartT) return 1;
                 if (t >= ripeStartT && t < ripeEndT) return 3;

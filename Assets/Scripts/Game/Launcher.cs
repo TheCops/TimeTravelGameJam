@@ -16,10 +16,15 @@ namespace TimeTravelBanana.Game
         [SerializeField] private float holdToRepeatDelay = 0.22f;
         [SerializeField] private int maxActiveBananas = 240;
 
+        [Header("Fire Hose (toggle with F)")]
+        [SerializeField] private float fireHoseInterval = 0.03f;
+        [SerializeField] private float fireHoseHoldDelay = 0.05f;
+
         private readonly Queue<Banana> active = new Queue<Banana>();
         private float holdTimer;
         private float repeatTimer;
         private bool repeating;
+        private bool fireHose;
 
         public void SetLaunchAngle(float degrees) => launchAngleDegrees = degrees;
         public void SetLaunchSpeed(float speed) => launchSpeed = speed;
@@ -58,6 +63,14 @@ namespace TimeTravelBanana.Game
             }
             var mouse = Mouse.current;
             if (mouse == null) return;
+            var kb = Keyboard.current;
+            if (kb != null && kb.fKey.wasPressedThisFrame)
+            {
+                fireHose = !fireHose;
+                Debug.Log(fireHose ? "Fire hose ON" : "Fire hose OFF");
+            }
+            float curInterval = fireHose ? fireHoseInterval : autoFireInterval;
+            float curHoldDelay = fireHose ? fireHoseHoldDelay : holdToRepeatDelay;
 
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
@@ -73,7 +86,7 @@ namespace TimeTravelBanana.Game
                 holdTimer += Time.deltaTime;
                 if (!repeating)
                 {
-                    if (holdTimer >= holdToRepeatDelay)
+                    if (holdTimer >= curHoldDelay)
                     {
                         repeating = true;
                         repeatTimer = 0f;
@@ -83,9 +96,9 @@ namespace TimeTravelBanana.Game
                 else
                 {
                     repeatTimer += Time.deltaTime;
-                    while (repeatTimer >= autoFireInterval)
+                    while (repeatTimer >= curInterval)
                     {
-                        repeatTimer -= autoFireInterval;
+                        repeatTimer -= curInterval;
                         Fire();
                     }
                 }

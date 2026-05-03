@@ -123,6 +123,36 @@ namespace TimeTravelBanana.EditorTools
             CreateLevel1Scene();
         }
 
+        [MenuItem("TimeTravelBanana/Tools/Add Vine Monkey To Current Scene")]
+        public static void AddVineMonkey()
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            if (!scene.IsValid())
+            {
+                Debug.LogWarning("AddVineMonkey: no active scene.");
+                return;
+            }
+            var monkeySprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Art/monkey.png");
+            if (monkeySprite == null)
+            {
+                Debug.LogError("AddVineMonkey: Assets/Resources/Art/monkey.png missing.");
+                return;
+            }
+            var go = new GameObject("VineMonkey");
+            go.transform.position = new Vector3(0f, 0f, 0f);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = monkeySprite;
+            sr.flipX = true;
+            sr.sortingOrder = 4;
+            var col = go.AddComponent<CircleCollider2D>();
+            col.isTrigger = true;
+            col.radius = 0.6f;
+            go.AddComponent<TimeTravelBanana.Game.VineMonkey>();
+            EditorSceneManager.MarkSceneDirty(scene);
+            Selection.activeGameObject = go;
+            Debug.Log("VineMonkey added at origin. Drag it where you want — its current position becomes the bob center.");
+        }
+
         [MenuItem("TimeTravelBanana/Tools/Add Monkey + Tree To Current Scene")]
         public static void AddMonkeyAndTree()
         {

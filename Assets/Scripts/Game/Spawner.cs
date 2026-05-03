@@ -29,7 +29,7 @@ namespace TimeTravelBanana.Game
         {
             var go = new GameObject("Block");
             go.transform.position = pos;
-            go.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+            go.transform.localScale = new Vector3(0.25f, 0.25f, 1f);
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = Resources.Load<Sprite>("Art/pan");
@@ -37,6 +37,26 @@ namespace TimeTravelBanana.Game
 
             var col = go.AddComponent<PolygonCollider2D>();
             col.sharedMaterial = new PhysicsMaterial2D("Block") { bounciness = 0.05f, friction = 0.6f };
+
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 1f;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+
+            return go.AddComponent<PlanningDraggable>();
+        }
+
+        public static PlanningDraggable Rocket(Vector2 pos)
+        {
+            var go = new GameObject("Rocket");
+            go.transform.position = pos;
+            go.transform.localScale = new Vector3(0.25f, 0.25f, 1f);
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = Resources.Load<Sprite>("Art/rocket");
+            sr.sortingOrder = 2;
+
+            var col = go.AddComponent<PolygonCollider2D>();
+            col.sharedMaterial = new PhysicsMaterial2D("Rocket") { bounciness = 0.05f, friction = 0.6f };
 
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = 1f;

@@ -540,9 +540,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Drag objects from the tray to plan a path.
-
-    Use W/S or UP/DOWN to move the monkey.
+  m_Text: 'Use W/S or UP/DOWN to move the monkey.
 
     Aim with the mouse, click to throw (hold for rapid fire).
 

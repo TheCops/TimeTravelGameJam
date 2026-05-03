@@ -50,8 +50,10 @@ namespace TimeTravelBanana.UI
             StylizeButton(instructionsButton, InstructionsBaseColor, Color.black);
             StylizeButton(quitButton, QuitBaseColor, Color.white);
             StylizeButton(instructionsBackButton, BackBaseColor, Color.black);
+            PositionBackButton();
 
             CreateBoomerang();
+            SetupInstructionsPanel();
         }
 
         private void CreateBackground()
@@ -179,6 +181,55 @@ namespace TimeTravelBanana.UI
             img.sprite = sprite;
             img.preserveAspect = true;
             img.raycastTarget = false;
+        }
+
+        private void PositionBackButton()
+        {
+            if (instructionsBackButton == null) return;
+            var rt = (RectTransform)instructionsBackButton.transform;
+            rt.sizeDelta = new Vector2(160f, 56f);
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0f, 0f);
+            rt.anchoredPosition = new Vector2(24f, 24f);
+
+            var txt = instructionsBackButton.GetComponentInChildren<Text>();
+            if (txt != null) txt.fontSize = 28;
+
+            var bezelTr = rt.parent?.Find(instructionsBackButton.name + "_Bezel");
+            if (bezelTr != null) Destroy(bezelTr.gameObject);
+        }
+
+        private void SetupInstructionsPanel()
+        {
+            if (instructionsPanel == null) return;
+            var sprite = Resources.Load<Sprite>("Art/instructions");
+            if (sprite == null) return;
+
+            var imgTr = instructionsPanel.transform.Find("InstructionsImage");
+            Image img;
+            if (imgTr == null)
+            {
+                var go = new GameObject("InstructionsImage", typeof(RectTransform), typeof(Image));
+                go.transform.SetParent(instructionsPanel.transform, false);
+                var rt = (RectTransform)go.transform;
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = rt.offsetMax = Vector2.zero;
+                rt.SetAsFirstSibling();
+                img = go.GetComponent<Image>();
+            }
+            else
+            {
+                img = imgTr.GetComponent<Image>();
+            }
+
+            if (img != null)
+            {
+                img.sprite = sprite;
+                img.preserveAspect = true;
+                img.raycastTarget = false;
+            }
         }
 
         private void Update()

@@ -1,4 +1,5 @@
 using UnityEngine;
+using TimeTravelBanana.Timeline;
 
 namespace TimeTravelBanana.Game
 {
@@ -16,13 +17,15 @@ namespace TimeTravelBanana.Game
         [SerializeField] private Color vineColor = new Color(0.30f, 0.18f, 0.06f);
 
         private Vector3 anchor;
-        private float startTime;
+        private float fallbackStartTime;
         private LineRenderer vine;
+        private TimelineManager timeline;
 
         private void Awake()
         {
             anchor = transform.position;
-            startTime = Time.time;
+            fallbackStartTime = Time.time;
+            timeline = FindFirstObjectByType<TimelineManager>();
             EnsureSprite();
             EnsureCollider();
             EnsureVine();
@@ -32,7 +35,8 @@ namespace TimeTravelBanana.Game
         {
             var gm = GameManager.Instance;
             if (gm != null && gm.State != GameState.Playing) return;
-            float t = (Time.time - startTime) * speed + phaseOffsetDeg * Mathf.Deg2Rad;
+            float clock = timeline != null ? timeline.CurrentTime : (Time.time - fallbackStartTime);
+            float t = clock * speed + phaseOffsetDeg * Mathf.Deg2Rad;
             Vector3 p = anchor;
             p.y = anchor.y + Mathf.Sin(t) * amplitude;
             transform.position = p;
@@ -42,8 +46,8 @@ namespace TimeTravelBanana.Game
         private void OnTriggerEnter2D(Collider2D other)
         {
             var banana = other.GetComponentInParent<Banana>();
-            if (banana == null) return;
-            Destroy(banana.gameObject);
+            if (banana == null || banana.Resolved) return;
+            banana.Eat();
         }
 
         private void EnsureSprite()

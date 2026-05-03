@@ -39,7 +39,7 @@ namespace TimeTravelBanana.UI
         {
             var gm = GameManager.Instance;
             if (gm != null) gm.OnPlayingState += HandlePlayingStarted;
-            Banana.OnAnyBananaScored += HandleBananaScored;
+            Banana.OnAnyBananaResolved += HandleBananaResolved;
             Refresh();
         }
 
@@ -47,7 +47,7 @@ namespace TimeTravelBanana.UI
         {
             var gm = GameManager.Instance;
             if (gm != null) gm.OnPlayingState -= HandlePlayingStarted;
-            Banana.OnAnyBananaScored -= HandleBananaScored;
+            Banana.OnAnyBananaResolved -= HandleBananaResolved;
         }
 
         private void HandlePlayingStarted()
@@ -56,12 +56,12 @@ namespace TimeTravelBanana.UI
             Refresh();
         }
 
-        private void HandleBananaScored(int points, Vector3 worldPos)
+        private void HandleBananaResolved(BananaScoreInfo info)
         {
-            score += points;
+            score += info.Points;
             if (score > sessionTopScore) sessionTopScore = score;
             Refresh();
-            SpawnPopup(points, worldPos);
+            SpawnPopup(info);
         }
 
         private void Refresh()
@@ -103,43 +103,44 @@ namespace TimeTravelBanana.UI
             popupLayer.SetAsLastSibling();
         }
 
-        private void SpawnPopup(int points, Vector3 worldPos)
+        private void SpawnPopup(BananaScoreInfo info)
         {
             if (popupLayer == null) EnsurePopupLayer();
             if (popupLayer == null || canvas == null || canvasRect == null) return;
             var cam = Camera.main;
             if (cam == null) return;
 
-            Vector3 anchorWorld = worldPos + new Vector3(0f, worldYOffset, 0f);
+            Vector3 anchorWorld = info.WorldPos + new Vector3(0f, worldYOffset, 0f);
             Vector3 screen = cam.WorldToScreenPoint(anchorWorld);
             Vector2 local;
             Camera uiCam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, uiCam, out local))
                 return;
 
+            Vector2 popupSize = new Vector2(420f, 130f);
+            local = ClampToCanvas(local, popupSize);
+
             var go = new GameObject("ScorePopup", typeof(RectTransform), typeof(Text), typeof(Outline), typeof(Shadow));
             var rt = (RectTransform)go.transform;
             rt.SetParent(popupLayer, false);
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(260f, 90f);
+            rt.sizeDelta = popupSize;
             rt.anchoredPosition = local;
             rt.localScale = Vector3.one * punchScale;
 
             var t = go.GetComponent<Text>();
             t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             t.alignment = TextAnchor.MiddleCenter;
-            t.text = (points > 0 ? "+" : "") + points;
             t.fontStyle = FontStyle.Bold;
-            t.fontSize = points >= 3 ? 64 : (points == 2 ? 52 : 44);
             t.raycastTarget = false;
-            t.color = points switch
-            {
-                3 => new Color(0.45f, 1.0f, 0.55f),
-                2 => new Color(1.0f, 0.95f, 0.35f),
-                1 => new Color(0.95f, 0.7f, 0.4f),
-                _ => new Color(1.0f, 0.35f, 0.35f),
-            };
+            t.horizontalOverflow = HorizontalWrapMode.Wrap;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.resizeTextForBestFit = true;
+            t.resizeTextMinSize = 22;
+            t.resizeTextMaxSize = info.IsEaten ? 56 : (info.Hits >= 2 ? 64 : (info.Base >= 3 ? 60 : 50));
+            t.text = BuildPopupText(info);
+            t.color = ColorForInfo(info);
 
             var outline = go.GetComponent<Outline>();
             outline.effectColor = new Color(0f, 0f, 0f, 0.95f);
@@ -150,6 +151,48 @@ namespace TimeTravelBanana.UI
             shadow.effectDistance = new Vector2(0f, -3f);
 
             StartCoroutine(AnimatePopup(go, rt, t, local));
+        }
+
+        private static string BuildPopupText(BananaScoreInfo info)
+        {
+            if (info.IsEaten) return info.Label + " " + info.Points;
+            if (info.IsLoss) return info.Label + " " + info.Points;
+            string sign = info.Points >= 0 ? "+" : "";
+            string head = info.Label + " " + sign + info.Points;
+            if (info.Hits >= 2) return head + "\nx" + (1 + info.Hits) + " chain!";
+            if (info.Hits == 1) return head + "\nx2 combo";
+            return head;
+        }
+
+        private static Color ColorForInfo(BananaScoreInfo info)
+        {
+            if (info.IsEaten) return new Color(0.85f, 0.55f, 0.30f);
+            if (info.IsLoss) return new Color(1.0f, 0.35f, 0.35f);
+            if (info.Hits >= 2) return new Color(1.0f, 0.55f, 0.95f);
+            if (info.Base == 5) return new Color(1.0f, 0.6f, 0.25f);
+            return info.Base switch
+            {
+                3 => new Color(0.45f, 1.0f, 0.55f),
+                2 => new Color(1.0f, 0.95f, 0.35f),
+                1 => new Color(0.95f, 0.7f, 0.4f),
+                _ => Color.white,
+            };
+        }
+
+        private Vector2 ClampToCanvas(Vector2 local, Vector2 popupSize)
+        {
+            if (canvasRect == null) return local;
+            Vector2 canvasSize = canvasRect.rect.size;
+            float padding = 16f;
+            float halfW = popupSize.x * 0.5f + padding;
+            float halfH = popupSize.y * 0.5f + padding;
+            float minX = -canvasSize.x * 0.5f + halfW;
+            float maxX =  canvasSize.x * 0.5f - halfW;
+            float minY = -canvasSize.y * 0.5f + halfH;
+            float maxY =  canvasSize.y * 0.5f - halfH - popupRise;
+            local.x = Mathf.Clamp(local.x, minX, maxX);
+            local.y = Mathf.Clamp(local.y, minY, maxY);
+            return local;
         }
 
         private IEnumerator AnimatePopup(GameObject go, RectTransform rt, Text txt, Vector2 startLocal)

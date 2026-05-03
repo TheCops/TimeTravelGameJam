@@ -21,6 +21,7 @@ namespace TimeTravelBanana.Game
             rb.gravityScale = 1f;
             rb.bodyType = RigidbodyType2D.Kinematic;
 
+            go.AddComponent<Contraption>();
             return go.AddComponent<PlanningDraggable>();
         }
 
@@ -42,6 +43,7 @@ namespace TimeTravelBanana.Game
             rb.bodyType = RigidbodyType2D.Kinematic;
 
             go.AddComponent<Pan>();
+            go.AddComponent<Contraption>();
             return go.AddComponent<PlanningDraggable>();
         }
 
@@ -63,6 +65,7 @@ namespace TimeTravelBanana.Game
             rb.bodyType = RigidbodyType2D.Kinematic;
 
             go.AddComponent<Rocket>();
+            go.AddComponent<Contraption>();
             return go.AddComponent<PlanningDraggable>();
         }
     }

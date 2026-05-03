@@ -3,7 +3,6 @@ using TimeTravelBanana.Timeline;
 
 namespace TimeTravelBanana.Game
 {
-    [RequireComponent(typeof(CircleCollider2D))]
     public class VineMonkey : MonoBehaviour
     {
         [Header("Motion")]
@@ -25,17 +24,32 @@ namespace TimeTravelBanana.Game
         {
             anchor = transform.position;
             fallbackStartTime = Time.time;
-            timeline = FindFirstObjectByType<TimelineManager>();
             EnsureSprite();
             EnsureCollider();
             EnsureVine();
+        }
+
+        private TimelineManager ResolveTimeline()
+        {
+            if (timeline != null) return timeline;
+            var gm = GameManager.Instance;
+            if (gm != null) timeline = gm.Timeline;
+            return timeline;
         }
 
         private void Update()
         {
             var gm = GameManager.Instance;
             if (gm != null && gm.State != GameState.Playing) return;
-            float clock = timeline != null ? timeline.CurrentTime : (Time.time - fallbackStartTime);
+
+            var tm = ResolveTimeline();
+            if (tm != null && tm.Mode != TimelineMode.Recording)
+            {
+                UpdateVine();
+                return;
+            }
+
+            float clock = tm != null ? tm.CurrentTime : (Time.time - fallbackStartTime);
             float t = clock * speed + phaseOffsetDeg * Mathf.Deg2Rad;
             Vector3 p = anchor;
             p.y = anchor.y + Mathf.Sin(t) * amplitude;
@@ -61,9 +75,8 @@ namespace TimeTravelBanana.Game
 
         private void EnsureCollider()
         {
-            var col = GetComponent<CircleCollider2D>();
+            var col = GetComponent<PolygonCollider2D>();
             col.isTrigger = true;
-            if (col.radius < 0.01f) col.radius = 0.6f;
         }
 
         private void EnsureVine()

@@ -168,13 +168,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeTravelBanana.UI.TimeDirectionDisplay
   defaultFontSize: 36
-  rewindFontSize: 60
+  rewindFontSize: 80
   defaultBottomOffset: 30
-  rewindBottomOffset: 30
+  rewindBottomOffset: 200
   rewindImageSize: {x: 8000, y: 1000}
   rewindImageOffsetY: 20
   rewindFps: 8
-  fontColor: {r: 0.72955966, g: 0, b: 0, a: 1}
+  fontColor: {r: 0.66666657, g: 0, b: 0, a: 1}
   rewindBlinkPeriod: 0.6
 --- !u!1 &183591460
 GameObject:
@@ -1072,6 +1072,63 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 749960538}
   m_CullTransparentMesh: 1
+--- !u!1001 &896085602
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 6273766609558910383, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_Name
+      value: VineMonkey
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.88
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8946365548811215662, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 7987e6a9753202a42981eaeaa92ddb76, type: 3}
 --- !u!1 &914604428
 GameObject:
   m_ObjectHideFlags: 0
@@ -3164,3 +3221,4 @@ SceneRoots:
   - {fileID: 510164677}
   - {fileID: 249808653}
   - {fileID: 416349899}
+  - {fileID: 896085602}

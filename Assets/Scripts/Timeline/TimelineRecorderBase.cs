@@ -50,8 +50,8 @@ namespace TimeTravelBanana.Timeline
             timeline = tm;
             OnConnected();
             timeline.Register(this);
-            if (timeline.Mode == TimelineMode.Recording) OnExitScrubbing();
-            else OnEnterScrubbing();
+            if (timeline.Mode == TimelineMode.Recording) OnEnterRecording();
+            else if (timeline.Mode == TimelineMode.Scrubbing) OnEnterScrubbing();
         }
 
         protected virtual void OnEnable()
@@ -59,7 +59,8 @@ namespace TimeTravelBanana.Timeline
             if (timeline == null) return;
             OnConnected();
             timeline.Register(this);
-            if (timeline.Mode != TimelineMode.Recording) OnEnterScrubbing();
+            if (timeline.Mode == TimelineMode.Recording) OnEnterRecording();
+            else if (timeline.Mode == TimelineMode.Scrubbing) OnEnterScrubbing();
         }
 
         protected virtual void Start()
@@ -81,15 +82,22 @@ namespace TimeTravelBanana.Timeline
 
         public void OnTimelineModeChanged(TimelineMode previous, TimelineMode next)
         {
-            bool wasFrozen = previous != TimelineMode.Recording;
-            bool isFrozen = next != TimelineMode.Recording;
-            if (!wasFrozen && isFrozen) OnEnterScrubbing();
-            else if (wasFrozen && !isFrozen) OnExitScrubbing();
+            if (previous != TimelineMode.Scrubbing && next == TimelineMode.Scrubbing)
+                OnEnterScrubbing();
+            else if (previous == TimelineMode.Scrubbing && next != TimelineMode.Scrubbing)
+                OnExitScrubbing();
+
+            if (previous != TimelineMode.Recording && next == TimelineMode.Recording)
+                OnEnterRecording();
+            else if (previous == TimelineMode.Recording && next != TimelineMode.Recording)
+                OnExitRecording();
         }
 
         protected virtual void OnConnected() { }
         protected virtual void OnEnterScrubbing() { }
         protected virtual void OnExitScrubbing() { }
+        protected virtual void OnEnterRecording() { }
+        protected virtual void OnExitRecording() { }
         protected virtual void OnLifecycleChanged(bool isAlive) { }
 
         protected bool IsAliveAt(float time)

@@ -2,120 +2,135 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public enum GameState
+namespace TimeTravelBanana.Game
 {
-    Placing,
-    Playing,
-    Resolved,
-    Paused
-}
-
-public class GameManager : MonoBehaviour
-{
-    public static GameManager Instance { get; private set; }
-
-    [SerializeField] private Launcher launcher;
-
-    private TimelineManager timeline;
-    private ObjectTimeController timeController;
-    private readonly List<PlanningDraggable> draggables = new List<PlanningDraggable>();
-
-    public GameState State { get; private set; } = GameState.Placing;
-    public Camera SceneCamera { get; private set; }
-    public TimelineManager Timeline => timeline;
-    public ObjectTimeController TimeController => timeController;
-
-    public event System.Action OnPlacingState;
-    public event System.Action OnPlayingState;
-    public event System.Action OnResolvedState;
-    public event System.Action OnPausedState;
-
-    private void Awake()
+    public enum GameState
     {
-        if (Instance != null && Instance != this)
+        Placing,
+        Playing,
+        Resolved,
+        Paused,
+    }
+
+    public class GameManager : MonoBehaviour
+    {
+        public static GameManager Instance { get; private set; }
+
+        [SerializeField] private Launcher launcher;
+
+        private readonly List<PlanningDraggable> draggables = new List<PlanningDraggable>();
+
+        public GameState State { get; private set; } = GameState.Placing;
+        public Launcher Launcher => launcher;
+
+        public event System.Action OnPlacingState;
+        public event System.Action OnPlayingState;
+        public event System.Action OnResolvedState;
+        public event System.Action OnPausedState;
+
+        private void Awake()
         {
-            Destroy(this);
-            return;
+            if (Instance != null && Instance != this)
+            {
+                Destroy(this);
+                return;
+            }
+            Instance = this;
+            ActivateHiddenCanvases();
         }
-        Instance = this;
 
-        timeline = gameObject.AddComponent<TimelineManager>();
-        timeController = gameObject.AddComponent<ObjectTimeController>();
-        timeController.SetTimeline(timeline);
-
-        SceneCamera = Camera.main;
-    }
-
-    private void Start()
-    {
-        EnterPlanning();
-    }
-
-    private void Update()
-    {
-        var kb = Keyboard.current;
-        if (kb == null) return;
-
-        if (State == GameState.Placing && kb.spaceKey.wasPressedThisFrame)
+        private static void ActivateHiddenCanvases()
         {
-            LaunchSequence();
+            var canvases = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < canvases.Length; i++)
+            {
+                var go = canvases[i].gameObject;
+                if (!go.activeSelf) go.SetActive(true);
+            }
         }
-        else if ((State == GameState.Resolved || State == GameState.Playing) && kb.rKey.wasPressedThisFrame)
+
+        private void OnDestroy()
         {
-            EnterPlanning();
+            if (Instance == this) Instance = null;
         }
-    }
 
-    public void RegisterDraggable(PlanningDraggable d)
-    {
-        if (d == null || draggables.Contains(d)) return;
-        draggables.Add(d);
-    }
-
-    public void UnregisterDraggable(PlanningDraggable d)
-    {
-        draggables.Remove(d);
-    }
-
-    private void LaunchSequence()
-    {
-        SetState(GameState.Playing);
-        timeController.BeginPlayback();
-        launcher.Launch();
-    }
-
-    private void EnterPlanning()
-    {
-        timeController?.StopPlayback();
-        timeline?.ResetTimeline();
-        SetState(GameState.Placing);
-    }
-
-    private void HandleWin()
-    {
-        if (State == GameState.Resolved) return;
-        SetState(GameState.Resolved);
-        timeController.StopPlayback();
-        Debug.Log("Win! Press R to reset.");
-    }
-
-    private void HandleLose()
-    {
-        if (State == GameState.Resolved) return;
-        SetState(GameState.Resolved);
-        timeController.StopPlayback();
-        Debug.Log("Lose. Press R to reset.");
-    }
-
-    private void SetState(GameState s)
-    {
-        State = s;
-        switch (s)
+        private void Start()
         {
-            case GameState.Placing:  OnPlacingState?.Invoke();  break;
-            case GameState.Playing:  OnPlayingState?.Invoke();  break;
-            case GameState.Resolved: OnResolvedState?.Invoke(); break;
-            case GameState.Paused:   OnPausedState?.Invoke();   break;
+            EnterPlanning(force: true);
+        }
+
+        private void Update()
+        {
+            var kb = Keyboard.current;
+            if (kb == null) return;
+
+            if (kb.spaceKey.wasPressedThisFrame)
+            {
+                if (State == GameState.Placing) EnterPlaytest();
+                else if (State == GameState.Playing) EnterPlanning();
+            }
+            else if (kb.rKey.wasPressedThisFrame && State != GameState.Placing)
+            {
+                EnterPlanning();
+            }
+        }
+
+        public void RegisterDraggable(PlanningDraggable d)
+        {
+            if (d == null || draggables.Contains(d)) return;
+            draggables.Add(d);
+            d.SetDragEnabled(State == GameState.Placing);
+        }
+
+        public void UnregisterDraggable(PlanningDraggable d)
+        {
+            if (d == null) return;
+            draggables.Remove(d);
+        }
+
+        public void EnterPlaytest()
+        {
+            if (State == GameState.Playing) return;
+            for (int i = 0; i < draggables.Count; i++)
+                if (draggables[i] != null) draggables[i].SetDragEnabled(false);
+            SetState(GameState.Playing);
+        }
+
+        public void EnterPlanning() => EnterPlanning(force: false);
+
+        public void EnterResolved()
+        {
+            if (State == GameState.Resolved) return;
+            for (int i = 0; i < draggables.Count; i++)
+                if (draggables[i] != null) draggables[i].SetDragEnabled(false);
+            SetState(GameState.Resolved);
+        }
+
+        public void EnterPaused()
+        {
+            if (State == GameState.Paused) return;
+            SetState(GameState.Paused);
+        }
+
+        private void EnterPlanning(bool force)
+        {
+            if (!force && State == GameState.Placing) return;
+            for (int i = 0; i < draggables.Count; i++)
+                if (draggables[i] != null) draggables[i].SetDragEnabled(true);
+            SetState(GameState.Placing);
+        }
+
+        private void SetState(GameState s)
+        {
+            if (State == s) return;
+            State = s;
+            switch (s)
+            {
+                case GameState.Placing:  OnPlacingState?.Invoke();  break;
+                case GameState.Playing:  OnPlayingState?.Invoke();  break;
+                case GameState.Resolved: OnResolvedState?.Invoke(); break;
+                case GameState.Paused:   OnPausedState?.Invoke();   break;
+            }
         }
     }
 }

@@ -1,6 +1,9 @@
-public enum TimelineMode
+namespace TimeTravelBanana.Timeline
 {
-    Idle,
-    Recording,
-    Scrubbing
+    public enum TimelineMode
+    {
+        Idle,
+        Recording,
+        Scrubbing
+    }
 }
